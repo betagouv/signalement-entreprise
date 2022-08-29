@@ -1,0 +1,16 @@
+ # Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Enterprises sync
+POST        /api/enterprises-sync/start-etablissement         company.EnterpriseImportController.startEtablissementFile()
+POST        /api/enterprises-sync/start-unitelegale           company.EnterpriseImportController.startUniteLegaleFile()
+POST        /api/enterprises-sync/cancel                      company.EnterpriseImportController.cancelAllFiles()
+POST        /api/enterprises-sync/cancel-etablissement        company.EnterpriseImportController.cancelEtablissementFile()
+POST        /api/enterprises-sync/cancel-unitelegale          company.EnterpriseImportController.cancelUniteLegaleFile()
+GET         /api/enterprises-sync/info                        company.EnterpriseImportController.getSyncInfo()
+
+# Company details API
+GET         /api/companies/search/:identity                   controllers.CompanyController.searchCompanyByIdentity(identity: String)
+GET         /api/companies/search                             controllers.CompanyController.searchCompany(q: String, postalCode: String)
+POST        /api/companies/search                             controllers.CompanyController.getBySiret()
