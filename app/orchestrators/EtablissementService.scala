@@ -2,6 +2,7 @@ package orchestrators
 
 import cats.implicits.toTraverseOps
 import company.companydata.CompanyDataRepositoryInterface
+import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Etablissement
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
@@ -25,10 +26,9 @@ class EtablissementServiceImpl(inseeClient: InseeClient, repository: CompanyData
     for {
       token <- inseeClient.generateToken()
       beginPeriod = OffsetDateTime.now().minusDays(10)
-      firstCall <- inseeClient.getEtablissement(token, beginPeriod)
-      _ = println(s"------------------  = ${firstCall.header.total} ------------------")
+      firstCall <- inseeClient.getEtablissement(token, disclosedStatus = Some(DisclosedStatus.N))
+      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
       _ <- iterateThroughEtablissement(beginPeriod, token, firstCall.header).recoverWith { case e =>
-        println(s"------------------  = !!!!!!!!!!!! ${e.getMessage} ------------------")
         logger.error("Unknown error on import", e)
         Future.failed(e)
       }
@@ -40,9 +40,17 @@ class EtablissementServiceImpl(inseeClient: InseeClient, repository: CompanyData
       header: Header
   ): Future[InseeEtablissementResponse] =
     inseeClient
-      .getEtablissement(token, beginPeriod, cursor = header.curseurSuivant)
+      .getEtablissement(token, None, disclosedStatus = Some(DisclosedStatus.N), cursor = header.curseurSuivant)
       .flatMap { r =>
-        processEtablissements(r).map(_ => r)
+        processEtablissements(r)
+          .map { _ =>
+            logger.info(s"${r.etablissements.size} companies processed")
+            r
+          }
+          .recoverWith { case e =>
+            logger.error("Error when updating etablissement database :", e)
+            Future.failed(e)
+          }
       }
       .flatMap { response =>
         if (header.nombre == InseeClient.EtablissementPageSize) {

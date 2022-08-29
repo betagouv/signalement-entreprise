@@ -3,10 +3,13 @@ package orchestrators
 import config.InseeTokenConfiguration
 import controllers.error.InseeEtablissementError
 import controllers.error.InseeTokenGenerationError
+import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.token.InseeTokenResponse
 import orchestrators.InseeClient.EtablissementPageSize
 import orchestrators.InseeClient.InitialCursor
+import orchestrators.InseeClient.LastModifiedField
+import orchestrators.InseeClient.WildCardPeriod
 import play.api.Logger
 import play.api.libs.json.JsError
 import sttp.client3.playJson.asJson
@@ -18,7 +21,10 @@ import sttp.client3.ResponseException
 import sttp.client3.UriContext
 import sttp.client3.basicRequest
 import sttp.model.StatusCode
+import sttp.model.Uri
 import cats.syntax.either._
+import sttp.model.Uri.QuerySegment
+import sttp.model.Uri.QuerySegment.KeyValue
 
 import java.time.OffsetDateTime
 import scala.concurrent.ExecutionContext
@@ -33,8 +39,10 @@ trait InseeClient {
   def generateToken(): Future[InseeTokenResponse]
   def getEtablissement(
       token: InseeTokenResponse,
-      begin: OffsetDateTime,
-      cursor: Option[String] = None
+      beginPeriod: Option[OffsetDateTime] = None,
+      cursor: Option[String] = None,
+      endPeriod: Option[OffsetDateTime] = None,
+      disclosedStatus: Option[DisclosedStatus] = None
   ): Future[InseeEtablissementResponse]
 }
 
@@ -72,22 +80,18 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
 
   override def getEtablissement(
       token: InseeTokenResponse,
-      beginPeriod: OffsetDateTime,
-      cursor: Option[String]
+      beginPeriod: Option[OffsetDateTime],
+      cursor: Option[String],
+      endPeriod: Option[OffsetDateTime] = None,
+      disclosedStatus: Option[DisclosedStatus] = None
   ): Future[InseeEtablissementResponse] = {
 
-    beginPeriod.format(DateFormatter)
-    val computedCursor: String = cursor.getOrElse(InitialCursor)
-
     val req: RequestT[Identity, Either[String, String], Any] = basicRequest
-      .get(
-//        uri"https://api.insee.fr/entreprises/sirene/V3/siret?q=dateDernierTraitementEtablissement:[$beginPeriodAtStartOfDay TO *]&nombre=$EtablissementPageSize&curseur=$computedCursor&tri=dateDernierTraitementEtablissement"
-        uri"https://api.insee.fr/entreprises/sirene/V3/siret?q=statutDiffusionEtablissement:N&nombre=$EtablissementPageSize&curseur=$computedCursor&tri=dateDernierTraitementEtablissement"
-      )
+      .get(buildUri(beginPeriod, cursor, endPeriod, disclosedStatus))
       .auth
       .bearer(token.accessToken.value)
 
-    logger.debug(req.toCurl)
+    logger.debug(req.toCurl(Set.empty[String]))
 
     val response: Future[Response[Either[ResponseException[String, JsError], InseeEtablissementResponse]]] =
       sendRequest(req)
@@ -96,6 +100,32 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
       .map(_.body)
       .flatMap(r => r.liftTo[Future])
 
+  }
+
+  private def buildUri(
+      beginPeriod: Option[OffsetDateTime],
+      cursor: Option[String],
+      endPeriod: Option[OffsetDateTime],
+      disclosedStatus: Option[DisclosedStatus]
+  ): Uri = {
+
+    val beginPeriodAtStartOfDay: String = beginPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
+    val endPeriodAtStartOfDay: String = endPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
+    val cursorQueryParam: QuerySegment = KeyValue("curseur", cursor.getOrElse(InitialCursor))
+    val sortQueryParam: QuerySegment = KeyValue("tri", LastModifiedField)
+    val pageSizeQueryParam: QuerySegment = KeyValue("nombre", EtablissementPageSize.toString)
+    val searchQueryParam = KeyValue(
+      "q",
+      s"""dateDernierTraitementEtablissement:[$beginPeriodAtStartOfDay TO $endPeriodAtStartOfDay]${disclosedStatus
+          .map(s => s" AND statutDiffusionEtablissement:${s.entryName}")
+          .getOrElse("")}"""
+    )
+
+    uri"https://api.insee.fr/entreprises/sirene/V3/siret"
+      .addQuerySegment(searchQueryParam)
+      .addQuerySegment(cursorQueryParam)
+      .addQuerySegment(sortQueryParam)
+      .addQuerySegment(pageSizeQueryParam)
   }
 
   def sendRequest(
@@ -107,6 +137,8 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
       .send(backend)
 
     response().flatMap { r =>
+      logger.info(s"Response : ${r.show(includeBody = false)}")
+      logger.trace(s"Response : ${r.show()}")
       if (r.isSuccess) {
         Future.successful(r)
       } else {
@@ -135,5 +167,7 @@ object InseeClient {
 
   val EtablissementPageSize = 1000
   val InitialCursor = "*"
+  val LastModifiedField = "dateDernierTraitementEtablissement"
+  val WildCardPeriod = "*"
 
 }

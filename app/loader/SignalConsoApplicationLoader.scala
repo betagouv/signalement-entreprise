@@ -12,7 +12,6 @@ import company.companydata.CompanyDataRepository
 import company.companydata.CompanyDataRepositoryInterface
 import company.entrepriseimportinfo.EnterpriseImportInfoRepository
 import config.ApplicationConfiguration
-import config.SignalConsoConfiguration
 import orchestrators._
 import play.api._
 import play.api.db.evolutions.EvolutionsComponents

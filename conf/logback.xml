@@ -38,6 +38,7 @@
     <logger name="services" level="DEBUG"/>
     <logger name="tasks" level="DEBUG"/>
     <logger name="utils" level="DEBUG"/>
+    <logger name="sttp.client3" level="DEBUG"/>
 
 <!--  <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>-->
 
