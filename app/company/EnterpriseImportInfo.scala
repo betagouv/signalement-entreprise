@@ -7,8 +7,8 @@ import java.util.UUID
 
 final case class EnterpriseImportInfo(
     id: UUID = UUID.randomUUID(),
-    fileName: String,
-    fileUrl: String,
+    fileName: Option[String] = None,
+    fileUrl: Option[String] = None,
     linesCount: Double,
     linesDone: Double = 0,
     startedAt: OffsetDateTime = OffsetDateTime.now,

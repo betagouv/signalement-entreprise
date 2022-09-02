@@ -1,11 +1,9 @@
 # --- !Ups
 
-CREATE TABLE IF NOT EXISTS etablissements_insee_import
-(
-    id          UUID PRIMARY KEY,
-    started_at  TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
-    ended_at    TIMESTAMP WITHOUT TIME ZONE,
-    errors      VARCHAR
-);
+ALTER TABLE etablissements_import_info
+    ALTER COLUMN file_url DROP NOT NULL;
+
+ALTER TABLE etablissements_import_info
+    ALTER COLUMN file_name DROP NOT NULL;
 
 # --- !Downs

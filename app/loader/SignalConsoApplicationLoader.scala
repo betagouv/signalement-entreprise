@@ -78,7 +78,8 @@ class SignalConsoComponents(
 
   val inseeClient: InseeClient = new InseeClientImpl(applicationConfiguration.app.inseeToken)
 
-  val etablissementService = new EtablissementServiceImpl(inseeClient, companyDataRepository)
+  val etablissementService =
+    new EtablissementServiceImpl(inseeClient, companyDataRepository, enterpriseImportInfoRepository)
 
   etablissementService.importEtablissement()
 

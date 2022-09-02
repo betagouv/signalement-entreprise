@@ -82,8 +82,8 @@ class EnterpriseSyncActor(
         _ <- enterpriseSyncInfoRepo.create(
           EnterpriseImportInfo(
             id = jobId,
-            fileName = companyFile.name,
-            fileUrl = companyFile.url.toString,
+            fileName = Some(companyFile.name),
+            fileUrl = Some(companyFile.url.toString),
             linesCount = companyFile.approximateSize
           )
         )
