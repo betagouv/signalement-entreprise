@@ -13,6 +13,7 @@ final case class EnterpriseImportInfo(
     linesDone: Double = 0,
     startedAt: OffsetDateTime = OffsetDateTime.now,
     endedAt: Option[OffsetDateTime] = None,
+    lastUpdated: Option[OffsetDateTime] = None,
     errors: Option[String] = None
 )
 

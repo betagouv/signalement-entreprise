@@ -17,37 +17,26 @@ class EnterpriseImportInfoRepository(val dbConfig: DatabaseConfig[JdbcProfile])(
   import PostgresProfile.api._
   import dbConfig._
 
-  class EnterpriseSyncInfoTable(tag: Tag) extends Table[EnterpriseImportInfo](tag, "etablissements_import_info") {
-    def id = column[UUID]("id", O.PrimaryKey)
-    def fileName = column[Option[String]]("file_name")
-    def fileUrl = column[Option[String]]("file_url")
-    def linesCount = column[Double]("lines_count")
-    def linesDone = column[Double]("lines_done")
-    def startedAt = column[OffsetDateTime]("started_at")
-    def endedAt = column[Option[OffsetDateTime]]("ended_at")
-    def errors = column[Option[String]]("errors")
-
-    def * = (
-      id,
-      fileName,
-      fileUrl,
-      linesCount,
-      linesDone,
-      startedAt,
-      endedAt,
-      errors
-    ) <> ((EnterpriseImportInfo.apply _).tupled, EnterpriseImportInfo.unapply)
-  }
-
-  val EnterpriseSyncInfotableQuery = TableQuery[EnterpriseSyncInfoTable]
+  val EnterpriseSyncInfotableQuery = TableQuery[EnterpriseImportInfoTable]
 
   def create(info: EnterpriseImportInfo): Future[EnterpriseImportInfo] =
     db.run(EnterpriseSyncInfotableQuery += info).map(_ => info)
 
   def byId(id: UUID) = EnterpriseSyncInfotableQuery.filter(_.id === id)
 
-  def updateLinesDone(id: UUID, linesDone: Double): Future[Int] =
-    db.run(byId(id).map(_.linesDone).update(linesDone))
+  def updateLinesDone(id: UUID, linesDone: Double, lastUpdated: Option[OffsetDateTime]): Future[Int] = {
+    val query = lastUpdated match {
+      case Some(lastUpdate) =>
+        byId(id)
+          .map(t => (t.linesDone, t.lastUpdated))
+          .update((linesDone, Some(lastUpdate)))
+      case None =>
+        byId(id)
+          .map(t => t.linesDone)
+          .update(linesDone)
+    }
+    db.run(query)
+  }
 
   def updateEndedAt(id: UUID, endAt: OffsetDateTime = OffsetDateTime.now()): Future[Int] =
     db.run(byId(id).map(_.endedAt).update(Some(endAt)))

@@ -99,7 +99,6 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
     response
       .map(_.body)
       .flatMap(r => r.liftTo[Future])
-
   }
 
   private def buildUri(
@@ -165,7 +164,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
 
 object InseeClient {
 
-  val EtablissementPageSize = 1000
+  val EtablissementPageSize = 50
   val InitialCursor = "*"
   val LastModifiedField = "dateDernierTraitementEtablissement"
   val WildCardPeriod = "*"

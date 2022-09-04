@@ -12,7 +12,9 @@ import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeTokenResponse
 import play.api.Logger
 
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -37,7 +39,7 @@ class EtablissementServiceImpl(
 //      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
       batchInfo <- entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0))
       _ <- iterateThroughEtablissement(
-        beginPeriod = None,
+        beginPeriod = Some(beginPeriod),
         endPeriod = None,
         disclosedStatus = Some(DisclosedStatus.N),
         token = token,
@@ -69,9 +71,16 @@ class EtablissementServiceImpl(
           endPeriod = endPeriod,
           cursor = header.flatMap(_.curseurSuivant)
         )
+      _ = etablissementResponse.etablissements
+        .map(e => (e.dateDernierTraitementEtablissement, e.dateCreationEtablissement))
+        .foreach(println(_))
       _ <- processEtablissements(etablissementResponse)
+
+      lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(
+        _.dateDernierTraitementEtablissement.map(d => OffsetDateTime.of(LocalDateTime.parse(d), ZoneOffset.UTC))
+      )
       linesDone = lineCount.getOrElse(0) + InseeClient.EtablissementPageSize
-      _ <- entrepriseImportRepository.updateLinesDone(executionId, linesDone.toDouble)
+      _ <- entrepriseImportRepository.updateLinesDone(executionId, linesDone.toDouble, lastUpdated)
       _ = logger.info(s"Processed $linesDone / ${etablissementResponse.header.total} lines so far")
     } yield etablissementResponse
 
@@ -103,37 +112,6 @@ class EtablissementServiceImpl(
         }
 
     } yield nextIteration
-//      inseeClient
-//        .getEtablissement(token, None, disclosedStatus = Some(DisclosedStatus.N), cursor = header.curseurSuivant)
-//        .flatMap { r =>
-//          processEtablissements(r)
-//            .map { _ =>
-//              logger.info(s"${r.etablissements.size} companies processed")
-//              r
-//            }
-//            .recoverWith { case e =>
-//              logger.error("Error when updating etablissement database :", e)
-//              Future.failed(e)
-//            }
-//        }
-//        .flatMap(r =>
-//          entrepriseImportRepository
-//            .updateLinesDone(executionId, lineCount + InseeClient.EtablissementPageSize)
-//            .map(_ => r)
-//        )
-//        .flatMap { response =>
-//          if (header.nombre == InseeClient.EtablissementPageSize) {
-//            iterateThroughEtablissement(
-//              beginPeriod,
-//              token,
-//              response.header,
-//              lineCount + InseeClient.EtablissementPageSize,
-//              executionId
-//            )
-//          } else {
-//            Future.successful(response)
-//          }
-//        }
 
   private def processEtablissements(etablissementResponse: InseeEtablissementResponse) =
     etablissementResponse.etablissements.map { etablissement =>

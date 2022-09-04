@@ -14,6 +14,7 @@ class EnterpriseImportInfoTable(tag: Tag) extends Table[EnterpriseImportInfo](ta
   def linesDone = column[Double]("lines_done")
   def startedAt = column[OffsetDateTime]("started_at")
   def endedAt = column[Option[OffsetDateTime]]("ended_at")
+  def lastUpdated = column[Option[OffsetDateTime]]("last_updated")
   def errors = column[Option[String]]("errors")
 
   def * = (
@@ -24,6 +25,7 @@ class EnterpriseImportInfoTable(tag: Tag) extends Table[EnterpriseImportInfo](ta
     linesDone,
     startedAt,
     endedAt,
+    lastUpdated,
     errors
   ) <> ((EnterpriseImportInfo.apply _).tupled, EnterpriseImportInfo.unapply)
 }

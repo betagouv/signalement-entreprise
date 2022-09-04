@@ -200,7 +200,7 @@ class EnterpriseSyncActor(
       .via(processFileFlow)
       .map { _ =>
         linesDone = linesDone + batchSize
-        enterpriseSyncInfoRepo.updateLinesDone(jobId, linesDone)
+        enterpriseSyncInfoRepo.updateLinesDone(jobId, linesDone, None)
       }
       .runWith(Sink.ignore)
 
