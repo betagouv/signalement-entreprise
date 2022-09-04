@@ -1,13 +1,8 @@
 package loader
 
 import _root_.controllers._
-import actors._
-import akka.actor.ActorRef
-import akka.actor.Props
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import company.EnterpriseImportController
-import company.EnterpriseImportOrchestrator
 import company.companydata.CompanyDataRepository
 import company.companydata.CompanyDataRepositoryInterface
 import company.entrepriseimportinfo.EnterpriseImportInfoRepository
@@ -83,14 +78,6 @@ class SignalConsoComponents(
 
   etablissementService.importEtablissement()
 
-  val enterpriseSyncActor: ActorRef = actorSystem.actorOf(
-    Props(new EnterpriseSyncActor(enterpriseImportInfoRepository, companyDataRepository)),
-    "enterprise-sync-actor"
-  )
-
-  val enterpriseImportOrchestrator =
-    new EnterpriseImportOrchestrator(enterpriseImportInfoRepository, enterpriseSyncActor)
-
   val companyOrchestrator = new CompanyOrchestrator(
     companyDataRepository
   )
@@ -100,8 +87,6 @@ class SignalConsoComponents(
     controllerComponents
   )
 
-  val enterpriseImportController =
-    new EnterpriseImportController(enterpriseImportOrchestrator, controllerComponents)
   io.sentry.Sentry.captureException(
     new Exception("This is a test Alert, used to check that Sentry alert are still active on each new deployments.")
   )
@@ -110,7 +95,6 @@ class SignalConsoComponents(
   lazy val router: Router =
     new _root_.router.Routes(
       httpErrorHandler,
-      enterpriseImportController,
       companyController
     )
 

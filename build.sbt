@@ -24,14 +24,6 @@ scalacOptions ++= Seq(
   "-Yrangepos"
 )
 
-routesImport ++= Seq(
-  "java.time.OffsetDateTime",
-  "utils.SIRET",
-  "controllers.UUIDPathBindable",
-  "controllers.OffsetDateTimeQueryStringBindable",
-  "controllers.SIRETPathBindable"
-)
-
 scalafixOnCompile := true
 
 resolvers += "Atlassian Releases" at "https://packages.atlassian.com/maven-public/"

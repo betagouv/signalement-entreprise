@@ -28,27 +28,27 @@ object ApiError {
   }
 
   final case object MalformedBody extends BadRequestError {
-    override val `type`: String = "SC-0014"
+    override val `type`: String = "SC-0002"
     override val title: String = "Malformed request body"
     override val details: String = s"Le corps de la requête ne correspond pas à ce qui est attendu par l'API."
   }
 
   final case class MalformedSIRET(InvalidSIRET: String) extends BadRequestError {
-    override val `type`: String = "SC-0034"
+    override val `type`: String = "SC-0003"
     override val title: String = "Malformed SIRET"
     override val details: String =
       s"Malformed SIRET : $InvalidSIRET"
   }
 
   final case class MalformedId(id: String) extends BadRequestError {
-    override val `type`: String = "SC-0031"
+    override val `type`: String = "SC-0004"
     override val title: String = "Malformed id"
     override val details: String =
       s"Malformed id : $id"
   }
 
   final case class MalformedValue(value: String, expectedValidType: String) extends BadRequestError {
-    override val `type`: String = "SC-0042"
+    override val `type`: String = "SC-0005"
     override val title: String = s"Malformed value, $value is not a valid value, expecting valid $expectedValidType"
     override val details: String =
       s"La valeur $value ne correspond pas à ce qui est attendu par l'API. Merci de renseigner une valeur valide pour $expectedValidType"

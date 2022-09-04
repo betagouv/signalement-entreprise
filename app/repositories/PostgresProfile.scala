@@ -23,15 +23,8 @@ trait PostgresProfile
       with JsonImplicits
       with DateTimeImplicits
       with PgTrgmImplicits
-      with SimpleSearchPlainImplicits {
+      with SimpleSearchPlainImplicits
 
-    implicit val strListTypeMapper = new SimpleArrayJdbcType[String]("text").to(_.toList)
-
-    val SubstrSQLFunction = SimpleFunction.ternary[String, Int, Int, String]("substr")
-
-    SimpleFunction.binary[Option[Double], Option[Double], Option[Double]]("least")
-
-  }
   override protected def computeCapabilities: Set[slick.basic.Capability] =
     super.computeCapabilities + slick.jdbc.JdbcCapabilities.insertOrUpdate
 }

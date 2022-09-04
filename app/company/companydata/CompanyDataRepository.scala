@@ -29,7 +29,12 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
   private[this] def filterClosedEtablissements(row: CompanyDataTable): Rep[Boolean] =
     row.etatAdministratifEtablissement.getOrElse("A") =!= "F"
 
-  override def insertAll(companies: Map[String, Option[String]]): DBIO[Int] = {
+  def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] =
+    db.run(
+      insertAll(companies)
+    )
+
+  private def insertAll(companies: Map[String, Option[String]]): DBIO[Int] = {
 
     val companyKeyValues: Map[String, String] =
       companies.view.mapValues(maybeValue => toOptionalSqlValue(maybeValue)).toMap
@@ -50,26 +55,6 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
       )}, ''), etablissements.denominationusuelleetablissement)
         """
   }
-
-  def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] =
-    db.run(
-      insertAll(companies)
-    )
-
-  def getBySiren(siren: SIREN): Future[Option[CompanyData]] =
-    db.run(
-      table
-        .filter(_.siren === siren)
-        .result
-        .headOption
-    )
-
-  override def updateName(name: (SIREN, String)): DBIO[Int] =
-    table
-      .filter(_.siren === name._1)
-      .filter(x => x.denominationUsuelleEtablissement.isEmpty || x.denominationUsuelleEtablissement === "")
-      .map(_.denominationUsuelleEtablissement)
-      .update(Some(name._2))
 
   override def search(q: String, postalCode: String): Future[List[(CompanyData, Option[CompanyActivity])]] =
     db.run(
@@ -106,31 +91,6 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
         .result
     )
 
-  override def searchBySiret(
-      siret: SIRET,
-      includeClosed: Boolean = false
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] = searchBySirets(List(siret), includeClosed)
-
-  override def filterHeadOffices(sirets: List[SIRET]): Future[List[CompanyData]] =
-    db.run(
-      table
-        .filter(_.siret inSetBind sirets)
-        .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(_.etablissementSiege === "true")
-        .to[List]
-        .result
-    )
-
-  override def getHeadOffice(siret: SIRET): Future[List[CompanyData]] =
-    db.run(
-      table
-        .filter(_.siren === SIREN(siret))
-        .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(_.etablissementSiege === "true")
-        .to[List]
-        .result
-    )
-
   override def searchBySiretIncludingHeadOfficeWithActivity(
       siret: SIRET
   ): Future[List[(CompanyData, Option[CompanyActivity])]] =
@@ -146,18 +106,7 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
         .result
     )
 
-  override def searchBySiretIncludingHeadOffice(siret: SIRET): Future[List[CompanyData]] =
-    db.run(
-      table
-        .filter(_.siren === SIREN(siret))
-        .filter(company => company.siret === siret || company.etablissementSiege === "true")
-        .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(filterClosedEtablissements)
-        .to[List]
-        .result
-    )
-
-  override def searchBySirens(
+  private def searchBySirens(
       sirens: List[SIREN],
       includeClosed: Boolean = false
   ): Future[List[(CompanyData, Option[CompanyActivity])]] =
@@ -180,7 +129,7 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
   override def searchHeadOfficeBySiren(siren: SIREN): Future[Option[(CompanyData, Option[CompanyActivity])]] =
     searchHeadOfficeBySiren(List(siren)).map(_.headOption)
 
-  override def searchHeadOfficeBySiren(
+  private def searchHeadOfficeBySiren(
       sirens: List[SIREN],
       includeClosed: Boolean = false
   ): Future[List[(CompanyData, Option[CompanyActivity])]] =
@@ -203,28 +152,4 @@ object CompanyDataRepository {
 
   def toSqlValue(value: String): String = s"'${value.replace("'", "''")}'"
 
-  def toFieldValueMap(companyData: CompanyData): Map[String, Option[String]] =
-    Map(
-      "id" -> Some(companyData.id.toString),
-      "siret" -> Some(companyData.siret.value),
-      "siren" -> Some(companyData.siren.value),
-      "datederniertraitementetablissement" -> companyData.dateDernierTraitementEtablissement,
-      "etablissementsiege" -> companyData.etablissementSiege,
-      "complementadresseetablissement" -> companyData.complementAdresseEtablissement,
-      "numerovoieetablissement" -> companyData.numeroVoieEtablissement,
-      "indicerepetitionetablissement" -> companyData.indiceRepetitionEtablissement,
-      "typevoieetablissement" -> companyData.typeVoieEtablissement,
-      "libellevoieetablissement" -> companyData.libelleVoieEtablissement,
-      "codepostaletablissement" -> companyData.codePostalEtablissement,
-      "libellecommuneetablissement" -> companyData.libelleCommuneEtablissement,
-      "libellecommuneetrangeretablissement" -> companyData.libelleCommuneEtrangerEtablissement,
-      "distributionspecialeetablissement" -> companyData.distributionSpecialeEtablissement,
-      "codecommuneetablissement" -> companyData.codeCommuneEtablissement,
-      "codecedexetablissement" -> companyData.codeCedexEtablissement,
-      "libellecedexetablissement" -> companyData.libelleCedexEtablissement,
-      DENOMINATION_USUELLE_ETABLISSEMENT -> companyData.denominationUsuelleEtablissement,
-      "enseigne1etablissement" -> companyData.enseigne1Etablissement,
-      "activiteprincipaleetablissement" -> companyData.activitePrincipaleEtablissement,
-      "etatadministratifetablissement" -> companyData.etatAdministratifEtablissement
-    )
 }

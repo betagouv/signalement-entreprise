@@ -156,15 +156,13 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
         }
       }
     }
-    // recover effect
-    // .recoverWith()
 
   }
 }
 
 object InseeClient {
 
-  val EtablissementPageSize = 50
+  val EtablissementPageSize = 1000
   val InitialCursor = "*"
   val LastModifiedField = "dateDernierTraitementEtablissement"
   val WildCardPeriod = "*"
