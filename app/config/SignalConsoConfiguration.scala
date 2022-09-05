@@ -1,6 +1,5 @@
 package config
 
-
 case class SignalConsoConfiguration(
     inseeToken: InseeTokenConfiguration
 )

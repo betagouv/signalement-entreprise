@@ -38,6 +38,9 @@ class EnterpriseImportInfoRepository(val dbConfig: DatabaseConfig[JdbcProfile])(
     db.run(query)
   }
 
+  def updateLineCount(id: UUID, lineCount: Double): Future[Int] =
+    db.run(byId(id).map(_.linesCount).update(lineCount))
+
   def updateEndedAt(id: UUID, endAt: OffsetDateTime = OffsetDateTime.now()): Future[Int] =
     db.run(byId(id).map(_.endedAt).update(Some(endAt)))
 
@@ -50,13 +53,12 @@ class EnterpriseImportInfoRepository(val dbConfig: DatabaseConfig[JdbcProfile])(
         .update((Some(error), Some(endAt)))
     )
 
-  def findRunning(): Future[Option[EnterpriseImportInfo]] =
+  def findRunning() =
     db.run(
       EnterpriseSyncInfotableQuery
         .filter(_.endedAt.isEmpty)
         .sortBy(_.startedAt.desc)
         .result
-        .headOption
     )
 
   def findLastEnded(): Future[Option[EnterpriseImportInfo]] =

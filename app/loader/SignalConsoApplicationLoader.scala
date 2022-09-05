@@ -79,7 +79,7 @@ class SignalConsoComponents(
   val etablissementService =
     new EtablissementServiceImpl(inseeClient, companyDataRepository, enterpriseImportInfoRepository)
 
-  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(60, TimeUnit.SECONDS), interval = 1.day) { () =>
+  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(1, TimeUnit.SECONDS), interval = 1.day) { () =>
     etablissementService.importEtablissement()
     ()
   }

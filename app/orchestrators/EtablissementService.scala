@@ -4,6 +4,7 @@ import cats.implicits.toTraverseOps
 import company.EnterpriseImportInfo
 import company.companydata.CompanyDataRepositoryInterface
 import company.entrepriseimportinfo.EnterpriseImportInfoRepository
+import controllers.error.EtablissementJobAleadyRunningError
 import models.insee.etablissement.Etablissement
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
@@ -17,6 +18,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import scala.util.chaining.scalaUtilChainingOps
 
 trait EtablissementService {}
 
@@ -31,23 +33,49 @@ class EtablissementServiceImpl(
   private[this] val logger = Logger(this.getClass)
 
   def importEtablissement(): Future[Unit] =
-    for {
-      query <- computeQuery()
-      firstCall <- inseeClient.getEtablissement(query)
-      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
-      batchInfo <- entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = firstCall.header.total.toDouble))
-      _ <- iterateThroughEtablissement(
-        query,
-        executionId = batchInfo.id
-      ).recoverWith { case e =>
+    entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
+      (for {
+        _ <- validateIfRunning(batchInfo.id)
+        query <- computeQuery()
+        firstCall <- inseeClient.getEtablissement(query)
+        _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
+        _ <- entrepriseImportRepository.updateLineCount(batchInfo.id, firstCall.header.total.toDouble)
+        _ <- iterateThroughEtablissement(
+          query,
+          executionId = batchInfo.id
+        )
+        _ <- entrepriseImportRepository.updateEndedAt(batchInfo.id)
+        _ = logger.info(s"Job ended successfully")
+      } yield ()).recoverWith { case e =>
         logger.error("Error on import", e)
         entrepriseImportRepository
           .updateError(batchInfo.id, error = s"${e.getMessage} : ${e.getCause}")
           .flatMap(_ => Future.failed(e))
       }
-      _ <- entrepriseImportRepository.updateEndedAt(batchInfo.id)
-      _ = logger.info(s"Job ended successfully")
-    } yield ()
+    }
+
+  private def validateIfRunning(current: UUID): Future[Unit] =
+    for {
+      before <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
+      _ <- Future(Thread.sleep(60000))
+      after <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
+      inter = after.intersect(before)
+      _ = logger.info(s"Found ${inter.size} non closed jobs")
+      _ <- inter
+        .map(x =>
+          entrepriseImportRepository
+            .updateError(x.id, error = "Auto closed")
+            .tap(_ => logger.info(s"Closing job with id ${x.id}"))
+        )
+        .sequence
+      jobsRunning = after.diff(inter)
+      res =
+        if (jobsRunning.nonEmpty) {
+          throw EtablissementJobAleadyRunningError(
+            s"Jobs with id  ${jobsRunning.map(_.id.toString()).mkString(",")} already running"
+          )
+        } else { () }
+    } yield res
 
   private def computeQuery() =
     for {
@@ -58,7 +86,6 @@ class EtablissementServiceImpl(
         token = token,
         beginPeriod = beginPeriod,
         endPeriod = None,
-//        disclosedStatus = Some(DisclosedStatus.N)
         disclosedStatus = None
       )
       _ = logger.info(s"-------------  Running etablissement job with $query   ----------------")
@@ -95,8 +122,8 @@ class EtablissementServiceImpl(
   private def processEtablissement(
       query: InseeEtablissementQuery,
       executionId: UUID,
-      header: Option[Header] = None,
-      lineCount: Option[Int] = None
+      header: Option[Header],
+      lineCount: Option[Int]
   ) =
     for {
       etablissementResponse <- inseeClient
