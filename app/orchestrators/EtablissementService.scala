@@ -57,7 +57,7 @@ class EtablissementServiceImpl(
   private def validateIfRunning(current: UUID): Future[Unit] =
     for {
       before <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
-      _ <- Future(Thread.sleep(60000))
+      _ <- Future(Thread.sleep(65000))
       after <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
       inter = after.intersect(before)
       _ = logger.info(s"Found ${inter.size} non closed jobs")

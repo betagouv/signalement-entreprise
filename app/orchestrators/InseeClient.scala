@@ -139,7 +139,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
         r.code match {
           case StatusCode.TooManyRequests =>
             logger.debug("Reaching API threshold (30 request/min) , waiting a bit to recover")
-            Thread.sleep(30000)
+            Thread.sleep(60000)
             response()
           case StatusCode.NotFound =>
             Future.failed(
