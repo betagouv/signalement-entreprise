@@ -1,6 +1,5 @@
 package config
 
-import java.net.URI
 
 case class SignalConsoConfiguration(
     inseeToken: InseeTokenConfiguration
