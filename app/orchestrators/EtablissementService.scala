@@ -4,12 +4,11 @@ import cats.implicits.toTraverseOps
 import company.EnterpriseImportInfo
 import company.companydata.CompanyDataRepositoryInterface
 import company.entrepriseimportinfo.EnterpriseImportInfoRepository
-import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Etablissement
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
-import models.insee.token.InseeTokenResponse
+import models.insee.token.InseeEtablissementQuery
 import play.api.Logger
 
 import java.time.LocalDateTime
@@ -33,76 +32,56 @@ class EtablissementServiceImpl(
 
   def importEtablissement(): Future[Unit] =
     for {
-      token <- inseeClient.generateToken()
-      beginPeriod = OffsetDateTime.now().minusDays(10)
-//      firstCall <- inseeClient.getEtablissement(token, disclosedStatus = Some(DisclosedStatus.N))
-//      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
-      batchInfo <- entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0))
+      query <- computeQuery()
+      firstCall <- inseeClient.getEtablissement(query)
+      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
+      batchInfo <- entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = firstCall.header.total.toDouble))
       _ <- iterateThroughEtablissement(
-        beginPeriod = Some(beginPeriod),
-        endPeriod = None,
-        disclosedStatus = Some(DisclosedStatus.N),
-        token = token,
+        query,
         executionId = batchInfo.id
       ).recoverWith { case e =>
         logger.error("Error on import", e)
         entrepriseImportRepository
-          .updateError(batchInfo.id, s"${e.getMessage} : ${e.getCause}")
+          .updateError(batchInfo.id, error = s"${e.getMessage} : ${e.getCause}")
           .flatMap(_ => Future.failed(e))
       }
       _ <- entrepriseImportRepository.updateEndedAt(batchInfo.id)
+      _ = logger.info(s"Job ended successfully")
     } yield ()
 
-  private def process(
-      beginPeriod: Option[OffsetDateTime],
-      endPeriod: Option[OffsetDateTime],
-      disclosedStatus: Option[DisclosedStatus] = None,
-      token: InseeTokenResponse,
-      executionId: UUID,
-      header: Option[Header] = None,
-      lineCount: Option[Int] = None
-  ) =
+  private def computeQuery() =
     for {
-      etablissementResponse <- inseeClient
-        .getEtablissement(
-          token = token,
-          beginPeriod = beginPeriod,
-          disclosedStatus = disclosedStatus,
-          endPeriod = endPeriod,
-          cursor = header.flatMap(_.curseurSuivant)
-        )
-      _ = etablissementResponse.etablissements
-        .map(e => (e.dateDernierTraitementEtablissement, e.dateCreationEtablissement))
-        .foreach(println(_))
-      _ <- processEtablissements(etablissementResponse)
-
-      lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(
-        _.dateDernierTraitementEtablissement.map(d => OffsetDateTime.of(LocalDateTime.parse(d), ZoneOffset.UTC))
+      token <- inseeClient.generateToken()
+      lastExecutedJob <- entrepriseImportRepository.findLastEnded()
+      beginPeriod = lastExecutedJob.flatMap(_.lastUpdated)
+      query = InseeEtablissementQuery(
+        token = token,
+        beginPeriod = beginPeriod,
+        endPeriod = None,
+//        disclosedStatus = Some(DisclosedStatus.N)
+        disclosedStatus = None
       )
-      linesDone = lineCount.getOrElse(0) + InseeClient.EtablissementPageSize
-      _ <- entrepriseImportRepository.updateLinesDone(executionId, linesDone.toDouble, lastUpdated)
-      _ = logger.info(s"Processed $linesDone / ${etablissementResponse.header.total} lines so far")
-    } yield etablissementResponse
+      _ = logger.info(s"-------------  Running etablissement job with $query   ----------------")
+    } yield query
 
   private def iterateThroughEtablissement(
-      beginPeriod: Option[OffsetDateTime],
-      endPeriod: Option[OffsetDateTime],
-      disclosedStatus: Option[DisclosedStatus] = None,
-      token: InseeTokenResponse,
+      query: InseeEtablissementQuery,
       executionId: UUID,
       header: Option[Header] = None,
       lineCount: Option[Int] = None
   ): Future[InseeEtablissementResponse] =
     for {
-      etablissementResponse <- process(beginPeriod, endPeriod, disclosedStatus, token, executionId, header, lineCount)
+      etablissementResponse <- processEtablissement(
+        query,
+        executionId,
+        header,
+        lineCount
+      )
       linesDone = lineCount.getOrElse(0) + InseeClient.EtablissementPageSize
       nextIteration <-
         if (etablissementResponse.header.nombre == InseeClient.EtablissementPageSize) {
           iterateThroughEtablissement(
-            beginPeriod,
-            endPeriod,
-            disclosedStatus,
-            token,
+            query,
             executionId,
             Some(etablissementResponse.header),
             Some(linesDone)
@@ -113,10 +92,31 @@ class EtablissementServiceImpl(
 
     } yield nextIteration
 
-  private def processEtablissements(etablissementResponse: InseeEtablissementResponse) =
+  private def processEtablissement(
+      query: InseeEtablissementQuery,
+      executionId: UUID,
+      header: Option[Header] = None,
+      lineCount: Option[Int] = None
+  ) =
+    for {
+      etablissementResponse <- inseeClient
+        .getEtablissement(
+          query,
+          cursor = header.flatMap(_.curseurSuivant)
+        )
+      _ <- insertOrUpdateEtablissements(etablissementResponse)
+      lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(
+        _.dateDernierTraitementEtablissement.map(d => OffsetDateTime.of(LocalDateTime.parse(d), ZoneOffset.UTC))
+      )
+      linesDone = lineCount.getOrElse(0) + etablissementResponse.header.nombre
+      _ <- entrepriseImportRepository.updateLinesDone(executionId, linesDone.toDouble, lastUpdated)
+      _ = logger.info(s"Processed $linesDone / ${etablissementResponse.header.total} lines so far")
+    } yield etablissementResponse
+
+  private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse) =
     etablissementResponse.etablissements.map { etablissement =>
       val denomination = computeDenomination(etablissement)
-      val companyData = etablissement.toMap(denomination)
+      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination)
       repository.insertOrUpdate(companyData)
     }.sequence
 

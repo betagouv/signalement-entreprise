@@ -41,52 +41,29 @@ class EnterpriseImportInfoRepository(val dbConfig: DatabaseConfig[JdbcProfile])(
   def updateEndedAt(id: UUID, endAt: OffsetDateTime = OffsetDateTime.now()): Future[Int] =
     db.run(byId(id).map(_.endedAt).update(Some(endAt)))
 
-  def updateError(id: UUID, error: String): Future[Int] =
-    db.run(byId(id).map(_.errors).update(Some(error)))
-
-  def updateAllEndedAt(name: String, endAt: OffsetDateTime = OffsetDateTime.now()): Future[Int] =
+  def updateError(id: UUID, endAt: OffsetDateTime = OffsetDateTime.now(), error: String): Future[Int] =
     db.run(
-      EnterpriseSyncInfotableQuery
-        .filter(_.endedAt.isEmpty)
-        .filter(_.fileName === name)
-        .map(_.endedAt)
-        .update(Some(endAt))
+      byId(id)
+        .map { j =>
+          (j.errors, j.endedAt)
+        }
+        .update((Some(error), Some(endAt)))
     )
 
-  def updateAllError(name: String, error: String): Future[Int] =
+  def findRunning(): Future[Option[EnterpriseImportInfo]] =
     db.run(
       EnterpriseSyncInfotableQuery
-        .filter(_.endedAt.isEmpty)
-        .filter(_.fileName === name)
-        .map(_.errors)
-        .update(Some(error))
-    )
-
-  def findRunning(name: String): Future[Option[EnterpriseImportInfo]] =
-    db.run(
-      EnterpriseSyncInfotableQuery
-        .filter(_.fileName === name)
         .filter(_.endedAt.isEmpty)
         .sortBy(_.startedAt.desc)
         .result
         .headOption
     )
 
-  def findLastEnded(name: String): Future[Option[EnterpriseImportInfo]] =
+  def findLastEnded(): Future[Option[EnterpriseImportInfo]] =
     db.run(
       EnterpriseSyncInfotableQuery
-        .filter(_.fileName === name)
-        .filter(_.endedAt.isDefined)
-        .sortBy(_.startedAt.desc)
-        .result
-        .headOption
-    )
-
-  def findLast(name: String): Future[Option[EnterpriseImportInfo]] =
-    db.run(
-      EnterpriseSyncInfotableQuery
-        .filter(_.fileName === name)
-        .sortBy(_.startedAt.desc)
+        .filter(_.lastUpdated.isDefined)
+        .sortBy(_.lastUpdated.desc)
         .result
         .headOption
     )

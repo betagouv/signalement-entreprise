@@ -5,6 +5,7 @@ import controllers.error.InseeEtablissementError
 import controllers.error.InseeTokenGenerationError
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.InseeEtablissementResponse
+import models.insee.token.InseeEtablissementQuery
 import models.insee.token.InseeTokenResponse
 import orchestrators.InseeClient.EtablissementPageSize
 import orchestrators.InseeClient.InitialCursor
@@ -38,11 +39,8 @@ trait InseeClient {
 
   def generateToken(): Future[InseeTokenResponse]
   def getEtablissement(
-      token: InseeTokenResponse,
-      beginPeriod: Option[OffsetDateTime] = None,
-      cursor: Option[String] = None,
-      endPeriod: Option[OffsetDateTime] = None,
-      disclosedStatus: Option[DisclosedStatus] = None
+      query: InseeEtablissementQuery,
+      cursor: Option[String] = None
   ): Future[InseeEtablissementResponse]
 }
 
@@ -79,17 +77,14 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
   }
 
   override def getEtablissement(
-      token: InseeTokenResponse,
-      beginPeriod: Option[OffsetDateTime],
-      cursor: Option[String],
-      endPeriod: Option[OffsetDateTime] = None,
-      disclosedStatus: Option[DisclosedStatus] = None
+      query: InseeEtablissementQuery,
+      cursor: Option[String]
   ): Future[InseeEtablissementResponse] = {
 
     val req: RequestT[Identity, Either[String, String], Any] = basicRequest
-      .get(buildUri(beginPeriod, cursor, endPeriod, disclosedStatus))
+      .get(buildUri(query.beginPeriod, cursor, query.endPeriod, query.disclosedStatus))
       .auth
-      .bearer(token.accessToken.value)
+      .bearer(query.token.accessToken.value)
 
     logger.debug(req.toCurl(Set.empty[String]))
 
