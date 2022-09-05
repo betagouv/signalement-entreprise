@@ -3,8 +3,6 @@ package config
 import java.net.URI
 
 case class SignalConsoConfiguration(
-    tmpDirectory: String,
-    apiURL: URI,
     inseeToken: InseeTokenConfiguration
 )
 

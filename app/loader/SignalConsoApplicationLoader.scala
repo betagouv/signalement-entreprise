@@ -28,6 +28,9 @@ import slick.jdbc.JdbcProfile
 
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.DurationInt
 
 class SignalConsoApplicationLoader() extends ApplicationLoader {
   var components: SignalConsoComponents = _
@@ -76,7 +79,9 @@ class SignalConsoComponents(
   val etablissementService =
     new EtablissementServiceImpl(inseeClient, companyDataRepository, enterpriseImportInfoRepository)
 
-  etablissementService.importEtablissement()
+  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(60, TimeUnit.SECONDS), interval = 1.day) { () =>
+    etablissementService.importEtablissement()
+  }
 
   val companyOrchestrator = new CompanyOrchestrator(
     companyDataRepository
