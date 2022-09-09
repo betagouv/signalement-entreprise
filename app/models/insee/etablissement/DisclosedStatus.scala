@@ -1,12 +1,8 @@
 package models.insee.etablissement
 
-import enumeratum._
+sealed trait DisclosedStatus
 
-sealed trait DisclosedStatus extends EnumEntry
-
-object DisclosedStatus extends PlayEnum[DisclosedStatus] {
-  val values = findValues
-
+object DisclosedStatus {
   case object P extends DisclosedStatus
   case object N extends DisclosedStatus
 }

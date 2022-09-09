@@ -26,4 +26,5 @@ package object controllers {
       }
       .liftTo[Future]
   }
+
 }

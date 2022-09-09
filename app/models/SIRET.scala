@@ -19,26 +19,23 @@ object SIRET {
       throw MalformedSIRET(value)
     }
 
-  @Deprecated(since = "use safer version instead")
-  def fromUnsafe(value: String) = new SIRET(value.replaceAll("\\s", ""))
-
   def pattern = s"[0-9]{$length}"
 
   def isValid(siret: String) = siret.matches(SIRET.pattern)
 
   implicit val siretColumnType = MappedColumnType.base[SIRET, String](
     _.value,
-    SIRET.fromUnsafe(_)
+    SIRET(_)
   )
   implicit val siretListColumnType = MappedColumnType.base[List[SIRET], List[String]](
     _.map(_.value),
-    _.map(SIRET.fromUnsafe(_))
+    _.map(SIRET(_))
   )
   implicit val siretWrites = new Writes[SIRET] {
     def writes(o: SIRET): JsValue =
       JsString(o.value)
   }
   implicit val siretReads = new Reads[SIRET] {
-    def reads(json: JsValue): JsResult[SIRET] = json.validate[String].map(SIRET.fromUnsafe(_))
+    def reads(json: JsValue): JsResult[SIRET] = json.validate[String].map(SIRET(_))
   }
 }

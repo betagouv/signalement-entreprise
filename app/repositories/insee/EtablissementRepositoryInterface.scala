@@ -4,11 +4,10 @@ import models.ActivityCode
 import models.SIREN
 import models.SIRET
 import models.EtablissementData
-import repositories.CRUDRepositoryInterface
 
 import scala.concurrent.Future
 
-trait EtablissementRepositoryInterface extends CRUDRepositoryInterface[EtablissementData] {
+trait EtablissementRepositoryInterface {
 
   def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int]
 

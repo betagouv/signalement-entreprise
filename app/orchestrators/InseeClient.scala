@@ -111,7 +111,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
     val searchQueryParam = KeyValue(
       "q",
       s"""dateDernierTraitementEtablissement:[$beginPeriodAtStartOfDay TO $endPeriodAtStartOfDay]${disclosedStatus
-          .map(s => s" AND statutDiffusionEtablissement:${s.entryName}")
+          .map(s => s" AND statutDiffusionEtablissement:$s")
           .getOrElse("")}"""
     )
 

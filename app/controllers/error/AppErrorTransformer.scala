@@ -56,8 +56,8 @@ object AppErrorTransformer {
         logger.error(formatMessage(request, maybeUserId, error), error)
         Results.InternalServerError(Json.toJson(ErrorPayload(error)))
 
-//      case error: UnauthorizedError =>
-//        logger.warn(formatMessage(request, maybeUserId, error), error)
-//        Results.Unauthorized(Json.toJson(AuthenticationErrorPayload))
+      case error: UnauthorizedError =>
+        logger.warn(formatMessage(request, maybeUserId, error), error)
+        Results.Unauthorized(Json.toJson(ErrorPayload(error)))
     }
 }

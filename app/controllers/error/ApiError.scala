@@ -54,4 +54,10 @@ object ApiError {
       s"La valeur $value ne correspond pas à ce qui est attendu par l'API. Merci de renseigner une valeur valide pour $expectedValidType"
   }
 
+  final case object InvalidToken extends UnauthorizedError {
+    override val `type`: String = "SC-0006"
+    override val title: String = s"Token is malformed"
+    override val details: String =
+      s"Token is malformed or not found"
+  }
 }

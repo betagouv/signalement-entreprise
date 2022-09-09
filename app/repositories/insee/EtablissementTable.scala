@@ -4,10 +4,14 @@ import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import models.EtablissementData
 import models.SIREN
 import models.SIRET
-import repositories.DatabaseTable
 import repositories.PostgresProfile.api._
+import slick.lifted.Rep
 
-class EtablissementTable(tag: Tag) extends DatabaseTable[EtablissementData](tag, "etablissements") {
+import java.util.UUID
+
+class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etablissements") {
+
+  val id: Rep[UUID] = column[UUID]("id", O.PrimaryKey)
   def siret = column[SIRET]("siret", O.PrimaryKey) // Primary key MUST be there so insertOrUpdateAll will do his job
   def siren = column[SIREN]("siren")
   def dateDernierTraitementEtablissement = column[Option[String]]("datederniertraitementetablissement")

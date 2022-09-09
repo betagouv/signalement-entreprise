@@ -6,7 +6,7 @@ import models.ActivityCode
 import models.SIREN
 import models.SIRET
 import models.EtablissementData
-import repositories.CRUDRepository
+
 import repositories.PostgresProfile.api._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -15,12 +15,11 @@ import slick.lifted.TableQuery
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class EtablissementRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(implicit
-    override val ec: ExecutionContext
-) extends CRUDRepository[EtablissementTable, EtablissementData]
-    with EtablissementRepositoryInterface {
+class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implicit
+    val ec: ExecutionContext
+) extends EtablissementRepositoryInterface {
 
-  override val table: TableQuery[EtablissementTable] = EtablissementTable.table
+  val table: TableQuery[EtablissementTable] = EtablissementTable.table
 
   import dbConfig._
 
