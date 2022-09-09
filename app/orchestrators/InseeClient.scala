@@ -50,7 +50,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
 
   import java.time.format.DateTimeFormatter
 
-  val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  val DateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
   val backend = HttpClientFutureBackend()
 

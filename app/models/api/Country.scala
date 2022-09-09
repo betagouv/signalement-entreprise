@@ -1,4 +1,4 @@
-package utils
+package models.api
 
 import play.api.libs.json._
 import repositories.PostgresProfile.api._

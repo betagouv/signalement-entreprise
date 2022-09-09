@@ -1,13 +1,13 @@
 package models
 
+import models.api.Address
+import models.api.EtablissementSearchResult
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
-import utils.SIREN
-import utils.SIRET
 
 import java.util.UUID
 
-case class CompanyData(
+case class EtablissementData(
     id: UUID = UUID.randomUUID(),
     siret: SIRET,
     siren: SIREN,
@@ -43,7 +43,7 @@ case class CompanyData(
     addressSupplement = complementAdresseEtablissement
   )
 
-  def toSearchResult(activityLabel: Option[String], isMarketPlace: Boolean = false) = CompanySearchResult(
+  def toSearchResult(activityLabel: Option[String], isMarketPlace: Boolean = false) = EtablissementSearchResult(
     siret = siret,
     name = denominationUsuelleEtablissement,
     brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
@@ -60,6 +60,6 @@ case class CompanyData(
   )
 }
 
-object CompanyData {
-  implicit val format: OFormat[CompanyData] = Json.format[CompanyData]
+object EtablissementData {
+  implicit val format: OFormat[EtablissementData] = Json.format[EtablissementData]
 }

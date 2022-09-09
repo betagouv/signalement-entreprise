@@ -1,33 +1,33 @@
 package controllers
 
-import orchestrators.CompanyOrchestrator
+import models.SIRET
+import orchestrators.EtablissementOrchestrator
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.AbstractController
 import play.api.mvc.ControllerComponents
-import utils.SIRET
 
 import scala.concurrent.ExecutionContext
 
-class CompanyController(
-    val companyOrchestrator: CompanyOrchestrator,
+class EtablissementController(
+    val etablissementOrchestrator: EtablissementOrchestrator,
     controllerComponents: ControllerComponents
 )(implicit val ec: ExecutionContext)
     extends AbstractController(controllerComponents) {
 
   val logger: Logger = Logger(this.getClass)
 
-  def searchCompany(q: String, postalCode: String) = Action.async { _ =>
-    logger.debug(s"searchCompany $postalCode $q")
-    companyOrchestrator
-      .searchCompany(q, postalCode)
+  def searchEtablissement(q: String, postalCode: String) = Action.async { _ =>
+    logger.debug(s"searchEtablissement $postalCode $q")
+    etablissementOrchestrator
+      .searchEtablissement(q, postalCode)
       .map(results => Ok(Json.toJson(results)))
   }
 
-  def searchCompanyByIdentity(identity: String) = Action.async { _ =>
-    logger.debug(s"searchCompanyByIdentity $identity")
-    companyOrchestrator
-      .searchCompanyByIdentity(identity)
+  def searchEtablissementByIdentity(identity: String) = Action.async { _ =>
+    logger.debug(s"searchEtablissementByIdentity $identity")
+    etablissementOrchestrator
+      .searchEtablissementByIdentity(identity)
       .map(res => Ok(Json.toJson(res)))
   }
 
@@ -35,7 +35,7 @@ class CompanyController(
     for {
       sirets <- request.parseBody[List[SIRET]]()
       _ = logger.debug(s"get info by siret")
-      res <- companyOrchestrator.getBySiret(sirets)
+      res <- etablissementOrchestrator.getBySiret(sirets)
     } yield Ok(Json.toJson(res))
   }
 

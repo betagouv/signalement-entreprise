@@ -3,9 +3,6 @@ package loader
 import _root_.controllers._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import company.companydata.CompanyDataRepository
-import company.companydata.CompanyDataRepositoryInterface
-import company.entrepriseimportinfo.EnterpriseImportInfoRepository
 import config.ApplicationConfiguration
 import orchestrators._
 import play.api._
@@ -23,6 +20,9 @@ import pureconfig.ConfigReader
 import pureconfig.ConfigSource
 import pureconfig.configurable.localTimeConfigConvert
 import pureconfig.generic.auto._
+import repositories.insee.EtablissementRepository
+import repositories.insee.EtablissementRepositoryInterface
+import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -68,7 +68,7 @@ class SignalConsoComponents(
 
   val dbConfig: DatabaseConfig[JdbcProfile] = slickApi.dbConfig[JdbcProfile](DbName("default"))
 
-  val companyDataRepository: CompanyDataRepositoryInterface = new CompanyDataRepository(dbConfig)
+  val companyDataRepository: EtablissementRepositoryInterface = new EtablissementRepository(dbConfig)
 
   val enterpriseImportInfoRepository: EnterpriseImportInfoRepository = new EnterpriseImportInfoRepository(
     dbConfig
@@ -79,16 +79,16 @@ class SignalConsoComponents(
   val etablissementService =
     new EtablissementServiceImpl(inseeClient, companyDataRepository, enterpriseImportInfoRepository)
 
-  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
+  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(1, TimeUnit.MINUTES), interval = 1.day) { () =>
     etablissementService.importEtablissement()
     ()
   }
 
-  val companyOrchestrator = new CompanyOrchestrator(
+  val companyOrchestrator = new EtablissementOrchestrator(
     companyDataRepository
   )
 
-  val companyController = new CompanyController(
+  val companyController = new EtablissementController(
     companyOrchestrator,
     controllerComponents
   )

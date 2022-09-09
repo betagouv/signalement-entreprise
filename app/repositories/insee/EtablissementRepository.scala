@@ -1,32 +1,32 @@
-package company.companydata
+package repositories.insee
 
-import company.companydata.CompanyDataRepository.toOptionalSqlValue
-import company.companydata.CompanyDataTable.DENOMINATION_USUELLE_ETABLISSEMENT
-import models.CompanyActivity
-import models.CompanyData
+import EtablissementRepository.toOptionalSqlValue
+import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
+import models.ActivityCode
+import models.SIREN
+import models.SIRET
+import models.EtablissementData
 import repositories.CRUDRepository
 import repositories.PostgresProfile.api._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery
-import utils.SIREN
-import utils.SIRET
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(implicit
+class EtablissementRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(implicit
     override val ec: ExecutionContext
-) extends CRUDRepository[CompanyDataTable, CompanyData]
-    with CompanyDataRepositoryInterface {
+) extends CRUDRepository[EtablissementTable, EtablissementData]
+    with EtablissementRepositoryInterface {
 
-  override val table: TableQuery[CompanyDataTable] = CompanyDataTable.table
+  override val table: TableQuery[EtablissementTable] = EtablissementTable.table
 
   import dbConfig._
 
   private val least = SimpleFunction.binary[Option[Double], Option[Double], Option[Double]]("least")
 
-  private[this] def filterClosedEtablissements(row: CompanyDataTable): Rep[Boolean] =
+  private[this] def filterClosedEtablissements(row: EtablissementTable): Rep[Boolean] =
     row.etatAdministratifEtablissement.getOrElse("A") =!= "F"
 
   def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] =
@@ -56,7 +56,7 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
         """
   }
 
-  override def search(q: String, postalCode: String): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  override def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.codePostalEtablissement === postalCode)
@@ -70,7 +70,7 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
         )
         .sortBy(result => least(result.denominationUsuelleEtablissement <-> q, result.enseigne1Etablissement <-> q))
         .take(10)
-        .joinLeft(CompanyActivityTable.table)
+        .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
@@ -79,13 +79,13 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
   override def searchBySirets(
       sirets: List[SIRET],
       includeClosed: Boolean = false
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siret inSetBind sirets)
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(!includeClosed)(filterClosedEtablissements)
-        .joinLeft(CompanyActivityTable.table)
+        .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
@@ -93,14 +93,14 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
 
   override def searchBySiretIncludingHeadOfficeWithActivity(
       siret: SIRET
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siren === SIREN(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filter(filterClosedEtablissements)
-        .joinLeft(CompanyActivityTable.table)
+        .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
@@ -109,13 +109,13 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
   private def searchBySirens(
       sirens: List[SIREN],
       includeClosed: Boolean = false
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siren inSetBind sirens)
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(!includeClosed)(filterClosedEtablissements)
-        .joinLeft(CompanyActivityTable.table)
+        .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
@@ -123,30 +123,30 @@ class CompanyDataRepository(override val dbConfig: DatabaseConfig[JdbcProfile])(
 
   override def searchBySiren(
       siren: SIREN
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     searchBySirens(List(siren))
 
-  override def searchHeadOfficeBySiren(siren: SIREN): Future[Option[(CompanyData, Option[CompanyActivity])]] =
+  override def searchHeadOfficeBySiren(siren: SIREN): Future[Option[(EtablissementData, Option[ActivityCode])]] =
     searchHeadOfficeBySiren(List(siren)).map(_.headOption)
 
   private def searchHeadOfficeBySiren(
       sirens: List[SIREN],
       includeClosed: Boolean = false
-  ): Future[List[(CompanyData, Option[CompanyActivity])]] =
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siren inSetBind sirens)
         .filter(_.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(!includeClosed)(filterClosedEtablissements)
-        .joinLeft(CompanyActivityTable.table)
+        .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
     )
 }
 
-object CompanyDataRepository {
+object EtablissementRepository {
 
   def toOptionalSqlValue(maybeValue: Option[String]): String = maybeValue.fold("NULL")(value => toSqlValue(value))
 

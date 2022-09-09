@@ -1,6 +1,6 @@
-package company.entrepriseimportinfo
+package repositories.entrepriseimportinfo
 
-import company.EnterpriseImportInfo
+import models.EnterpriseImportInfo
 import repositories.PostgresProfile
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile

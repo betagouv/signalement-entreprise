@@ -1,13 +1,13 @@
-package company.companydata
+package repositories.insee
 
-import company.companydata.CompanyDataTable.DENOMINATION_USUELLE_ETABLISSEMENT
-import models.CompanyData
+import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
+import models.EtablissementData
+import models.SIREN
+import models.SIRET
 import repositories.DatabaseTable
 import repositories.PostgresProfile.api._
-import utils.SIREN
-import utils.SIRET
 
-class CompanyDataTable(tag: Tag) extends DatabaseTable[CompanyData](tag, "etablissements") {
+class EtablissementTable(tag: Tag) extends DatabaseTable[EtablissementData](tag, "etablissements") {
   def siret = column[SIRET]("siret", O.PrimaryKey) // Primary key MUST be there so insertOrUpdateAll will do his job
   def siren = column[SIREN]("siren")
   def dateDernierTraitementEtablissement = column[Option[String]]("datederniertraitementetablissement")
@@ -51,10 +51,10 @@ class CompanyDataTable(tag: Tag) extends DatabaseTable[CompanyData](tag, "etabli
     enseigne1Etablissement,
     activitePrincipaleEtablissement,
     etatAdministratifEtablissement
-  ) <> ((CompanyData.apply _).tupled, CompanyData.unapply)
+  ) <> ((EtablissementData.apply _).tupled, EtablissementData.unapply)
 }
 
-object CompanyDataTable {
+object EtablissementTable {
   val DENOMINATION_USUELLE_ETABLISSEMENT = "denominationusuelleetablissement"
-  val table = TableQuery[CompanyDataTable]
+  val table = TableQuery[EtablissementTable]
 }

@@ -1,4 +1,4 @@
-package utils
+package models
 
 import controllers.error.ApiError.MalformedSIRET
 import play.api.libs.json._

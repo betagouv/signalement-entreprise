@@ -1,10 +1,10 @@
-package models
+package models.api
 
+import models.SIRET
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
-import utils.SIRET
 
-case class CompanySearchResult(
+case class EtablissementSearchResult(
     siret: SIRET,
     name: Option[String],
     brand: Option[String],
@@ -16,6 +16,6 @@ case class CompanySearchResult(
     isOpen: Boolean
 )
 
-object CompanySearchResult {
-  implicit val format: OFormat[CompanySearchResult] = Json.format[CompanySearchResult]
+object EtablissementSearchResult {
+  implicit val format: OFormat[EtablissementSearchResult] = Json.format[EtablissementSearchResult]
 }

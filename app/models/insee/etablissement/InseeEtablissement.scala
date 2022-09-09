@@ -1,11 +1,11 @@
 package models.insee.etablissement
 
+import models.SIREN
+import models.SIRET
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
-import utils.SIREN
-import utils.SIRET
 
-case class Etablissement(
+case class InseeEtablissement(
     siret: SIRET,
     siren: SIREN,
     nic: String,
@@ -91,12 +91,12 @@ case class Etablissement(
 
 }
 
-object Etablissement {
+object InseeEtablissement {
 
-  implicit val format: OFormat[Etablissement] = Json.format[Etablissement]
+  implicit val format: OFormat[InseeEtablissement] = Json.format[InseeEtablissement]
 
-  def withNonEmpty(obj: Etablissement) =
-    Etablissement(
+  def withNonEmpty(obj: InseeEtablissement) =
+    InseeEtablissement(
       siret = obj.siret,
       siren = obj.siren,
       nic = obj.nic,

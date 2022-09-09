@@ -1,8 +1,7 @@
-package models
+package models.api
 
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
-import utils.Country
 
 case class Address(
     number: Option[String] = None,

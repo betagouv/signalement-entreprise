@@ -1,16 +1,16 @@
 package orchestrators
 
 import cats.implicits.toTraverseOps
-import company.EnterpriseImportInfo
-import company.companydata.CompanyDataRepositoryInterface
-import company.entrepriseimportinfo.EnterpriseImportInfoRepository
 import controllers.error.EtablissementJobAleadyRunningError
-import models.insee.etablissement.Etablissement
+import models.EnterpriseImportInfo
+import models.insee.etablissement.InseeEtablissement
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeEtablissementQuery
 import play.api.Logger
+import repositories.insee.EtablissementRepositoryInterface
+import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
 
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -24,7 +24,7 @@ trait EtablissementService {}
 
 class EtablissementServiceImpl(
     inseeClient: InseeClient,
-    repository: CompanyDataRepositoryInterface,
+    repository: EtablissementRepositoryInterface,
     entrepriseImportRepository: EnterpriseImportInfoRepository
 )(implicit
     ec: ExecutionContext
@@ -150,7 +150,7 @@ class EtablissementServiceImpl(
       repository.insertOrUpdate(companyData)
     }.sequence
 
-  private[orchestrators] def computeDenomination(etablissement: Etablissement): String =
+  private[orchestrators] def computeDenomination(etablissement: InseeEtablissement): String =
     etablissement.lastPeriodeEtablissement
       .flatMap(_.denominationUsuelleEtablissement)
       .getOrElse(denominationFromUniteLegale(etablissement.uniteLegale))
