@@ -49,12 +49,9 @@ class EtablissementService(
 
   def getBySiret(sirets: List[SIRET]): Future[List[EtablissementSearchResult]] =
     etablissementRepository
-      .searchBySirets(sirets, includeClosed = true)
-      .map { etablissements =>
-        println(s"------------------ etablissements = ${etablissements} ------------------")
-        etablissements.map { case (etablissementData, maybeActivity) =>
-          etablissementData.toSearchResult(maybeActivity.map(_.label))
-        }
-      }
+      .searchBySirets(sirets)
+      .map(_.map { case (etablissementData, maybeActivity) =>
+        etablissementData.toSearchResult(maybeActivity.map(_.label))
+      })
 
 }

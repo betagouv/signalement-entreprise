@@ -13,6 +13,7 @@ object Dependencies {
     lazy val catsCoreVersion = "2.8.0"
     lazy val pureConfigVersion = "0.17.1"
     lazy val jacksonModuleScalaVersion = "2.13.3"
+    lazy val enumeratumVersion = "1.7.0"
     lazy val postgresqlVersion = "42.3.6"
     lazy val refinedVersion = "0.9.29"
     lazy val chimneyVersion = "0.6.1"
@@ -39,6 +40,8 @@ object Dependencies {
     val slickPgPlayJson = "com.github.tminglei" %% "slick-pg_play-json" % Versions.slickPgVersion
     val jacksonModuleScala =
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % Versions.jacksonModuleScalaVersion
+    val enumeratum = "com.beachape" %% "enumeratum" % Versions.enumeratumVersion
+    val enumeratumPlay = "com.beachape" %% "enumeratum-play" % Versions.enumeratumVersion
     val postgresql = "org.postgresql" % "postgresql" % Versions.postgresqlVersion
     val refinded = "eu.timepit" %% "refined" % Versions.refinedVersion
     val chimney = "io.scalaland" %% "chimney" % Versions.chimneyVersion
@@ -53,6 +56,8 @@ object Dependencies {
     Compile.pureConfig,
     Compile.playSlick,
     Compile.playSlickEvolutions,
+    Compile.enumeratum,
+    Compile.enumeratumPlay,
     Compile.slickPg,
     Compile.slickPgPlayJson,
     Compile.jacksonModuleScala,

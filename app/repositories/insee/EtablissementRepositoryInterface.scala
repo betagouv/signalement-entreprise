@@ -14,8 +14,7 @@ trait EtablissementRepositoryInterface {
   def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySirets(
-      sirets: List[SIRET],
-      includeClosed: Boolean = false
+      sirets: List[SIRET]
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySiretIncludingHeadOfficeWithActivity(

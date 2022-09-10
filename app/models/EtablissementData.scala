@@ -2,6 +2,7 @@ package models
 
 import models.api.Address
 import models.api.EtablissementSearchResult
+import models.insee.etablissement.DisclosedStatus
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
@@ -28,7 +29,8 @@ case class EtablissementData(
     denominationUsuelleEtablissement: Option[String],
     enseigne1Etablissement: Option[String],
     activitePrincipaleEtablissement: Option[String],
-    etatAdministratifEtablissement: Option[String]
+    etatAdministratifEtablissement: Option[String],
+    statutDiffusionEtablissement: DisclosedStatus
 ) {
   def toAddress: Address = Address(
     number = numeroVoieEtablissement,
@@ -56,7 +58,8 @@ case class EtablissementData(
       case "O" => true
       case "F" => false
       case _   => true
-    }
+    },
+    disclosedStatus = this.statutDiffusionEtablissement
   )
 }
 

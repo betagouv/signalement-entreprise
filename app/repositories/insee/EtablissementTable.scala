@@ -4,6 +4,8 @@ import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import models.EtablissementData
 import models.SIREN
 import models.SIRET
+
+import models.insee.etablissement.DisclosedStatus
 import repositories.PostgresProfile.api._
 import slick.lifted.Rep
 
@@ -32,6 +34,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
   def enseigne1Etablissement = column[Option[String]]("enseigne1etablissement")
   def activitePrincipaleEtablissement = column[Option[String]]("activiteprincipaleetablissement")
   def etatAdministratifEtablissement = column[Option[String]]("etatadministratifetablissement")
+  def statutDiffusionEtablissement = column[DisclosedStatus]("statutdiffusionetablissement")
 
   def * = (
     id,
@@ -54,7 +57,8 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
     denominationUsuelleEtablissement,
     enseigne1Etablissement,
     activitePrincipaleEtablissement,
-    etatAdministratifEtablissement
+    etatAdministratifEtablissement,
+    statutDiffusionEtablissement
   ) <> ((EtablissementData.apply _).tupled, EtablissementData.unapply)
 }
 

@@ -23,6 +23,7 @@ object SIREN {
     _.value,
     SIREN(_)
   )
+
   implicit val sirenListColumnType = MappedColumnType.base[List[SIREN], List[String]](
     _.map(_.value),
     _.map(SIREN(_))
