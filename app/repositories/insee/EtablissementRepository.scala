@@ -2,15 +2,15 @@ package repositories.insee
 
 import EtablissementRepository.toOptionalSqlValue
 import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
+import models.ActivityCode
+import models.EtablissementData
 import models.SIREN
 import models.SIRET
-import models.EtablissementData
 import models.insee.etablissement.DisclosedStatus
 import repositories.PostgresProfile.api._
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery
-
 import DisclosedStatus.Public
 
 import scala.concurrent.ExecutionContext
