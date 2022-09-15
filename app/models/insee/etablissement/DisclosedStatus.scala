@@ -13,6 +13,6 @@ object DisclosedStatus extends PlayEnum[DisclosedStatus] {
 
   implicit val DisclosedStatusColumnType = MappedColumnType.base[DisclosedStatus, String](
     _.entryName,
-    DisclosedStatus.withNameOption(_).getOrElse(DisclosedStatus.Public)
+    DisclosedStatus.withName
   )
 }
