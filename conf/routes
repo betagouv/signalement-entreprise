@@ -1,0 +1,7 @@
+ # Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET         /api/companies/search/:identity        controllers.EtablissementController.searchEtablissementByIdentity(identity: String)
+GET         /api/companies/search                  controllers.EtablissementController.searchEtablissement(q: String, postalCode: String)
+POST        /api/companies/search                  controllers.EtablissementController.getBySiret()
