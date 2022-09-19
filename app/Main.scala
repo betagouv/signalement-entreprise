@@ -18,7 +18,7 @@ import repositories.insee.EtablissementRepository
 import repositories.insee.EtablissementRepositoryInterface
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-
+import Token.ClearToken
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
