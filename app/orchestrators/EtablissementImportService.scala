@@ -1,10 +1,12 @@
 package orchestrators
 
 import cats.implicits.toTraverseOps
+import config.SignalConsoConfiguration
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
-import models.insee.etablissement.InseeEtablissement
+import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Header
+import models.insee.etablissement.InseeEtablissement
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeEtablissementQuery
@@ -23,7 +25,8 @@ import scala.util.chaining.scalaUtilChainingOps
 class EtablissementImportService(
     inseeClient: InseeClient,
     repository: EtablissementRepositoryInterface,
-    entrepriseImportRepository: EnterpriseImportInfoRepository
+    entrepriseImportRepository: EnterpriseImportInfoRepository,
+    signalConsoConfiguration: SignalConsoConfiguration
 )(implicit
     ec: ExecutionContext
 ) {
@@ -83,11 +86,19 @@ class EtablissementImportService(
       token <- inseeClient.generateToken()
       lastExecutedJob <- entrepriseImportRepository.findLastEnded()
       beginPeriod = lastExecutedJob.flatMap(_.lastUpdated)
+      disclosedStatus =
+        if (signalConsoConfiguration.publicDataOnly) {
+          logger.warn(
+            " !!!!!  Fetching disclosed public data only , check PUBLIC_DATA_ONLY env var for more information!!!!!"
+          )
+          Some(DisclosedStatus.Public)
+        } else None
+
       query = InseeEtablissementQuery(
         token = token,
         beginPeriod = beginPeriod,
         endPeriod = None,
-        disclosedStatus = None
+        disclosedStatus = disclosedStatus
       )
       _ = logger.info(s"-------------  Running etablissement job with $query   ----------------")
     } yield query

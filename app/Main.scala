@@ -18,7 +18,6 @@ import repositories.insee.EtablissementRepository
 import repositories.insee.EtablissementRepositoryInterface
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-import Token.ClearToken
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
@@ -60,7 +59,12 @@ class SignalConsoComponents(
   val inseeClient: InseeClient = new InseeClientImpl(applicationConfiguration.app.inseeToken)
 
   val etablissementService =
-    new EtablissementImportService(inseeClient, companyDataRepository, enterpriseImportInfoRepository)
+    new EtablissementImportService(
+      inseeClient,
+      companyDataRepository,
+      enterpriseImportInfoRepository,
+      applicationConfiguration.app
+    )
 
   actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
     etablissementService.importEtablissement()
