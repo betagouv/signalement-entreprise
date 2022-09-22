@@ -13,7 +13,8 @@ case class EtablissementSearchResult(
     activityCode: Option[String],
     activityLabel: Option[String],
     isMarketPlace: Boolean = false,
-    isOpen: Boolean
+    isOpen: Boolean,
+    isPublic: Boolean
 )
 
 object EtablissementSearchResult {

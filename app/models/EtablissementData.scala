@@ -71,7 +71,8 @@ case class EtablissementData(
         case "O" => true
         case "F" => false
         case _   => true
-      }
+      },
+      isPublic = statutDiffusionEtablissement == DisclosedStatus.Public
     )
 
 }
