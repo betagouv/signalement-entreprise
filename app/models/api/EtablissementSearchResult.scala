@@ -1,7 +1,6 @@
 package models.api
 
 import models.SIRET
-import models.insee.etablissement.DisclosedStatus
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
@@ -14,8 +13,7 @@ case class EtablissementSearchResult(
     activityCode: Option[String],
     activityLabel: Option[String],
     isMarketPlace: Boolean = false,
-    isOpen: Boolean,
-    disclosedStatus: DisclosedStatus
+    isOpen: Boolean
 )
 
 object EtablissementSearchResult {

@@ -51,7 +51,7 @@ class EtablissementService(
     etablissementRepository
       .searchBySirets(sirets)
       .map(_.map { case (etablissementData, maybeActivity) =>
-        etablissementData.toSearchResult(maybeActivity.map(_.label))
+        etablissementData.toSearchResult(activityLabel = maybeActivity.map(_.label), filterAdress = false)
       })
 
 }

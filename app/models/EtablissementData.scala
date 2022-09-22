@@ -32,35 +32,48 @@ case class EtablissementData(
     etatAdministratifEtablissement: Option[String],
     statutDiffusionEtablissement: DisclosedStatus
 ) {
-  def toAddress: Address = Address(
+  def toAddress(): Address = Address(
     number = numeroVoieEtablissement,
     street = Option(
       Seq(
         typeVoieEtablissement.flatMap(typeVoie => TypeVoies.values.find(_._1 == typeVoie).map(_._2.toUpperCase)),
         libelleVoieEtablissement
       ).flatten
-    ).filterNot(_.isEmpty).map(_.mkString(" ")),
+    )
+      .filterNot(_.isEmpty)
+      .map(_.mkString(" ")),
     postalCode = codePostalEtablissement,
     city = libelleCommuneEtablissement,
     addressSupplement = complementAdresseEtablissement
   )
 
-  def toSearchResult(activityLabel: Option[String], isMarketPlace: Boolean = false) = EtablissementSearchResult(
-    siret = siret,
-    name = denominationUsuelleEtablissement,
-    brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
-    isHeadOffice = etablissementSiege.exists(_.toBoolean),
-    address = toAddress,
-    activityCode = activitePrincipaleEtablissement,
-    activityLabel = activityLabel,
-    isMarketPlace = isMarketPlace,
-    isOpen = etatAdministratifEtablissement.forall {
-      case "O" => true
-      case "F" => false
-      case _   => true
-    },
-    disclosedStatus = this.statutDiffusionEtablissement
-  )
+  def toFilteredAddress(): Address = {
+    val address = toAddress()
+    address.copy(
+      number = address.number
+        .filter(_ => this.statutDiffusionEtablissement == DisclosedStatus.Public),
+      street = address.street
+        .filter(_ => this.statutDiffusionEtablissement == DisclosedStatus.Public)
+    )
+  }
+
+  def toSearchResult(activityLabel: Option[String], isMarketPlace: Boolean = false, filterAdress: Boolean = true) =
+    EtablissementSearchResult(
+      siret = siret,
+      name = denominationUsuelleEtablissement,
+      brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
+      isHeadOffice = etablissementSiege.exists(_.toBoolean),
+      address = if (filterAdress) toFilteredAddress() else toAddress(),
+      activityCode = activitePrincipaleEtablissement,
+      activityLabel = activityLabel,
+      isMarketPlace = isMarketPlace,
+      isOpen = etatAdministratifEtablissement.forall {
+        case "O" => true
+        case "F" => false
+        case _   => true
+      }
+    )
+
 }
 
 object EtablissementData {
