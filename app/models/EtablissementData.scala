@@ -53,6 +53,8 @@ case class EtablissementData(
       number = address.number
         .filter(_ => this.statutDiffusionEtablissement == DisclosedStatus.Public),
       street = address.street
+        .filter(_ => this.statutDiffusionEtablissement == DisclosedStatus.Public),
+      addressSupplement = address.addressSupplement
         .filter(_ => this.statutDiffusionEtablissement == DisclosedStatus.Public)
     )
   }
