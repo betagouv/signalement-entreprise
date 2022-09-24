@@ -12,11 +12,12 @@ import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery
 import DisclosedStatus.Public
+import config.SignalConsoConfiguration
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implicit
+class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: SignalConsoConfiguration)(implicit
     val ec: ExecutionContext
 ) extends EtablissementRepositoryInterface {
 
@@ -56,7 +57,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implici
         .filter(_.codePostalEtablissement === postalCode)
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filter(filterClosedEtablissements)
-        .filter(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
+        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filter(result =>
           least(
             result.denominationUsuelleEtablissement <-> q,
@@ -92,7 +93,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implici
         .filter(_.siren === SIREN(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
+        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filter(filterClosedEtablissements)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
@@ -108,7 +109,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implici
         .filter(_.siren === siren)
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filter(filterClosedEtablissements)
-        .filter(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
+        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
@@ -124,7 +125,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implici
         .filter(_.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filter(filterClosedEtablissements)
-        .filter(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
+        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]

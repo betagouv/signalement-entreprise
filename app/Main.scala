@@ -50,7 +50,8 @@ class SignalConsoComponents(
 
   val dbConfig: DatabaseConfig[JdbcProfile] = slickApi.dbConfig[JdbcProfile](DbName("default"))
 
-  val companyDataRepository: EtablissementRepositoryInterface = new EtablissementRepository(dbConfig)
+  val companyDataRepository: EtablissementRepositoryInterface =
+    new EtablissementRepository(dbConfig, applicationConfiguration.app)
 
   val enterpriseImportInfoRepository: EnterpriseImportInfoRepository = new EnterpriseImportInfoRepository(
     dbConfig
