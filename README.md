@@ -78,13 +78,14 @@ L'API est accessible à l'adresse `http://localhost:9000/api` avec rechargement 
 
 ## Variables d'environnement
 
-|Nom| Description                                                                       | Valeur par défaut |
-|:---|:----------------------------------------------------------------------------------|:------------------|
-|INSEE_KEY| Identifiant pour communiquer avec l'API de l'insee                                ||
-|INSEE_SECRET| Secret pour communiquer avec l'API de l'insee                                     ||
-|APPLICATION_SECRET| Clé secrète de l'application                                                      ||
-|AUTHENTICATION_TOKEN| Token hashé qui sert à communiquer avec l'API signal conso pour la Maj entreprise ||
-|PUBLIC_DATA_ONLY| Récupération des données entreprise publiques seulement                           | true              |
+| Nom                  | Description                                                                                                                                                                            | Valeur par défaut |
+|:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------|
+| INSEE_KEY            | Identifiant pour communiquer avec l'API de l'insee                                                                                                                                     ||
+| INSEE_SECRET         | Secret pour communiquer avec l'API de l'insee                                                                                                                                          ||
+| APPLICATION_SECRET   | Clé secrète de l'application                                                                                                                                                           ||
+| AUTHENTICATION_TOKEN | Token hashé qui sert à communiquer avec l'API signal conso pour la Maj entreprise                                                                                                      ||
+| FILTER_NON_DISCLOSED | Les API publiques d'entreprises exposées pour le site ne renvoient plus les entreprises privées (feature flag en cas de disfonctionnement pour éviter d'exposer des données sensibles) ||
+| PUBLIC_DATA_ONLY     | Récupération via l'INSEE des données entreprise publiques seulement  (utile pour la base de test pour ne pas avoir de données sensibles)                                               | true              |
 ---
 
 

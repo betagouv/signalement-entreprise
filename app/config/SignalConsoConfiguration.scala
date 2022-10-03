@@ -8,7 +8,8 @@ import pureconfig.error.FailureReason
 case class SignalConsoConfiguration(
     inseeToken: InseeTokenConfiguration,
     apiAuthenticationToken: HashedToken,
-    publicDataOnly: Boolean
+    publicDataOnly: Boolean,
+    filterNonDisclosed: Boolean
 )
 
 case class InseeTokenConfiguration(key: String, secret: String)
