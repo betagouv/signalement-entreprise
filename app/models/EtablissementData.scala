@@ -3,6 +3,7 @@ package models
 import models.api.Address
 import models.api.EtablissementSearchResult
 import models.insee.etablissement.DisclosedStatus
+import orchestrators.toOffsetDateTime
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
@@ -74,7 +75,8 @@ case class EtablissementData(
         case "F" => false
         case _   => true
       },
-      isPublic = statutDiffusionEtablissement == DisclosedStatus.Public
+      isPublic = statutDiffusionEtablissement == DisclosedStatus.Public,
+      lastUpdated = toOffsetDateTime(dateDernierTraitementEtablissement)
     )
 
 }
