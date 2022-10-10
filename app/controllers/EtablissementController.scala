@@ -10,7 +10,9 @@ import play.api.libs.json._
 import play.api.mvc.AbstractController
 import play.api.mvc.ControllerComponents
 
+import java.time.OffsetDateTime
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 class EtablissementController(
     val etablissementOrchestrator: EtablissementService,
@@ -40,9 +42,13 @@ class EtablissementController(
   def getBySiret() = Action.async(parse.json) { request =>
     val res = for {
       _ <- validateToken(request, token)
+      lastUpdated = request.queryString
+        .get("lastUpdated")
+        .flatMap(_.headOption)
+        .flatMap(c => Try(OffsetDateTime.parse(c)).toOption)
       sirets <- request.parseBody[List[SIRET]]()
       _ = logger.debug(s"get info by siret")
-      res <- etablissementOrchestrator.getBySiret(sirets)
+      res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated)
     } yield Ok(Json.toJson(res))
     res.recover { case err => handleError(request, err) }
   }

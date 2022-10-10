@@ -14,9 +14,6 @@ import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
 
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -144,8 +141,8 @@ class EtablissementImportService(
           cursor = header.flatMap(_.curseurSuivant)
         )
       _ <- insertOrUpdateEtablissements(etablissementResponse)
-      lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(
-        _.dateDernierTraitementEtablissement.map(d => OffsetDateTime.of(LocalDateTime.parse(d), ZoneOffset.UTC))
+      lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(e =>
+        toOffsetDateTime(e.dateDernierTraitementEtablissement)
       )
       linesDone = lineCount.getOrElse(0) + etablissementResponse.header.nombre
       _ <- entrepriseImportRepository.updateLinesDone(executionId, linesDone.toDouble, lastUpdated)

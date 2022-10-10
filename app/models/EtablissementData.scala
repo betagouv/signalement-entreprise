@@ -81,4 +81,5 @@ case class EtablissementData(
 
 object EtablissementData {
   implicit val format: OFormat[EtablissementData] = Json.format[EtablissementData]
+  type EtablissementWithActivity = (EtablissementData, Option[ActivityCode])
 }
