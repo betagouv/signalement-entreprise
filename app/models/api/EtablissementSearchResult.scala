@@ -1,23 +1,23 @@
 package models.api
 
-import models.Siret
+import models.SIRET
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
 import java.time.OffsetDateTime
 
 case class EtablissementSearchResult(
-    siret: Siret,
-    name: Option[String],
-    brand: Option[String],
-    isHeadOffice: Boolean,
-    address: Address,
-    activityCode: Option[String],
-    activityLabel: Option[String],
-    isMarketPlace: Boolean = false,
-    isOpen: Boolean,
-    isPublic: Boolean,
-    lastUpdated: Option[OffsetDateTime]
+                                      siret: SIRET,
+                                      name: Option[String],
+                                      brand: Option[String],
+                                      isHeadOffice: Boolean,
+                                      address: Address,
+                                      activityCode: Option[String],
+                                      activityLabel: Option[String],
+                                      isMarketPlace: Boolean = false,
+                                      isOpen: Boolean,
+                                      isPublic: Boolean,
+                                      lastUpdated: Option[OffsetDateTime]
 )
 
 object EtablissementSearchResult {

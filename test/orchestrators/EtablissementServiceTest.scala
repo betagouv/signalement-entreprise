@@ -2,8 +2,8 @@ package orchestrators
 
 import models.ActivityCode
 import models.EtablissementData
-import models.Siren
-import models.Siret
+import models.SIREN
+import models.SIRET
 import models.insee.etablissement.DisclosedStatus
 import repositories.insee.EtablissementRepositoryInterface
 
@@ -24,15 +24,15 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
     val pastDate = Some(now.minusDays(10).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
     val siretNonDisclosedNewlyUpdated = genEtablissement(
-      Siret.fromUnsafe("11111111111111"),
+      SIRET.fromUnsafe("11111111111111"),
       DisclosedStatus.NonPublic,
       futureDate
     )
     val siretDisclosedNewlyUpdated =
-      genEtablissement(Siret.fromUnsafe("22222222222222"), DisclosedStatus.Public, futureDate)
+      genEtablissement(SIRET.fromUnsafe("22222222222222"), DisclosedStatus.Public, futureDate)
     val siretNonDisclosedUntouched =
-      genEtablissement(Siret.fromUnsafe("33333333333333"), DisclosedStatus.NonPublic, pastDate)
-    val siretDisclosedUntouched = genEtablissement(Siret.fromUnsafe("44444444444444"), DisclosedStatus.Public, pastDate)
+      genEtablissement(SIRET.fromUnsafe("33333333333333"), DisclosedStatus.NonPublic, pastDate)
+    val siretDisclosedUntouched = genEtablissement(SIRET.fromUnsafe("44444444444444"), DisclosedStatus.Public, pastDate)
 
     val searchMockedResult = List(
       siretNonDisclosedNewlyUpdated,
@@ -87,22 +87,22 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
       override def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
-      override def searchBySirets(sirets: List[Siret]): Future[List[(EtablissementData, Option[ActivityCode])]] =
+      override def searchBySirets(sirets: List[SIRET]): Future[List[(EtablissementData, Option[ActivityCode])]] =
         Future.successful(searchBySiretsFunc)
 
       override def searchBySiretIncludingHeadOfficeWithActivity(
-          siret: Siret,
-          openCompaniesOnly: Boolean
+                                                                 siret: SIRET,
+                                                                 openCompaniesOnly: Boolean
       ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
       override def searchBySiren(
-          siren: Siren,
-          openCompaniesOnly: Boolean
+                                  siren: SIREN,
+                                  openCompaniesOnly: Boolean
       ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
       override def searchHeadOfficeBySiren(
-          siren: Siren,
-          openCompaniesOnly: Boolean
+                                            siren: SIREN,
+                                            openCompaniesOnly: Boolean
       ): Future[Option[(EtablissementData, Option[ActivityCode])]] =
         ???
     }
@@ -111,15 +111,15 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
   }
 
   def genEtablissement(
-      siret: Siret,
-      disclosedStatus: DisclosedStatus,
-      dernierTraitementEtablissement: Option[String]
+                        siret: SIRET,
+                        disclosedStatus: DisclosedStatus,
+                        dernierTraitementEtablissement: Option[String]
   ): (EtablissementData, Option[ActivityCode]) =
     (
       new EtablissementData(
         id = UUID.randomUUID(),
         siret = siret,
-        siren = Siren.fromUnsafe(siret.value.substring(0, Siren.SirenLength)),
+        siren = SIREN.fromUnsafe(siret.value.substring(0, SIREN.SirenLength)),
         dateDernierTraitementEtablissement = dernierTraitementEtablissement,
         etablissementSiege = None,
         complementAdresseEtablissement = None,

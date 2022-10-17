@@ -2,8 +2,8 @@ package repositories.insee
 
 import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import models.EtablissementData
-import models.Siren
-import models.Siret
+import models.SIREN
+import models.SIRET
 
 import models.insee.etablissement.DisclosedStatus
 import repositories.PostgresProfile.api._
@@ -14,8 +14,8 @@ import java.util.UUID
 class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etablissements") {
 
   val id: Rep[UUID] = column[UUID]("id", O.PrimaryKey)
-  def siret = column[Siret]("siret", O.PrimaryKey) // Primary key MUST be there so insertOrUpdateAll will do his job
-  def siren = column[Siren]("siren")
+  def siret = column[SIRET]("siret", O.PrimaryKey) // Primary key MUST be there so insertOrUpdateAll will do his job
+  def siren = column[SIREN]("siren")
   def dateDernierTraitementEtablissement = column[Option[String]]("datederniertraitementetablissement")
   def etablissementSiege = column[Option[String]]("etablissementsiege")
   def complementAdresseEtablissement = column[Option[String]]("complementadresseetablissement")

@@ -3,7 +3,7 @@ package controllers
 import controllers.Token.HashedToken
 import controllers.Token.validateToken
 import controllers.error.AppErrorTransformer.handleError
-import models.Siret
+import models.SIRET
 import orchestrators.EtablissementService
 import play.api.Logger
 import play.api.libs.json._
@@ -46,7 +46,7 @@ class EtablissementController(
         .get("lastUpdated")
         .flatMap(_.headOption)
         .flatMap(c => Try(OffsetDateTime.parse(c)).toOption)
-      sirets <- request.parseBody[List[Siret]]()
+      sirets <- request.parseBody[List[SIRET]]()
       _ = logger.debug(s"get info by siret")
       res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated)
     } yield Ok(Json.toJson(res))

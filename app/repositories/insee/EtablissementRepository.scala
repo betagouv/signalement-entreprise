@@ -4,8 +4,8 @@ import EtablissementRepository.toOptionalSqlValue
 import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import models.ActivityCode
 import models.EtablissementData
-import models.Siren
-import models.Siret
+import models.SIREN
+import models.SIRET
 import models.insee.etablissement.DisclosedStatus
 import repositories.PostgresProfile.api._
 import slick.basic.DatabaseConfig
@@ -75,7 +75,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySirets(
-      sirets: List[Siret]
+      sirets: List[SIRET]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
@@ -88,12 +88,12 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiretIncludingHeadOfficeWithActivity(
-      siret: Siret,
-      openCompaniesOnly: Boolean
+                                                             siret: SIRET,
+                                                             openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
-        .filter(_.siren === Siren(siret))
+        .filter(_.siren === SIREN(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
@@ -105,8 +105,8 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiren(
-      siren: Siren,
-      openCompaniesOnly: Boolean
+                              siren: SIREN,
+                              openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
@@ -121,8 +121,8 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchHeadOfficeBySiren(
-      siren: Siren,
-      openCompaniesOnly: Boolean
+                                        siren: SIREN,
+                                        openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table

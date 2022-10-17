@@ -4,8 +4,8 @@ import models.api.EtablissementSearchResult
 import models.EtablissementData.EtablissementWithActivity
 import models.ActivityCode
 import models.EtablissementData
-import models.Siren
-import models.Siret
+import models.SIREN
+import models.SIRET
 import models.insee.etablissement.DisclosedStatus
 import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
@@ -46,15 +46,15 @@ class EtablissementService(
     } yield searchResult
   }
 
-  def extractIdentity(identity: String): Option[Either[Siren, Siret]] = (Siret(identity), Siren(identity)) match {
+  def extractIdentity(identity: String): Option[Either[SIREN, SIRET]] = (SIRET(identity), SIREN(identity)) match {
     case (Some(siret), _)    => Some(Right(siret))
     case (None, Some(siren)) => Some(Left(siren))
     case _                   => None
   }
 
   def searchEtablissementBySiren(
-      siren: Siren,
-      openCompaniesOnly: Boolean
+                                  siren: SIREN,
+                                  openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     for {
       maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
@@ -65,7 +65,7 @@ class EtablissementService(
           .getOrElse(etablissementRepository.searchBySiren(siren, openCompaniesOnly))
     } yield etablissements
 
-  def getBySiret(sirets: List[Siret], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =
+  def getBySiret(sirets: List[SIRET], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =
     for {
       etablissementList <- etablissementRepository
         .searchBySirets(sirets)
