@@ -4,8 +4,8 @@ import EtablissementRepository.toOptionalSqlValue
 import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import models.ActivityCode
 import models.EtablissementData
-import models.SIREN
-import models.SIRET
+import models.Siren
+import models.Siret
 import models.insee.etablissement.DisclosedStatus
 import repositories.PostgresProfile.api._
 import slick.basic.DatabaseConfig
@@ -13,6 +13,8 @@ import slick.jdbc.JdbcProfile
 import slick.lifted.TableQuery
 import DisclosedStatus.Public
 import config.SignalConsoConfiguration
+import models.EtablissementData.Closed
+import models.EtablissementData.Open
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -28,7 +30,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
   private val least = SimpleFunction.binary[Option[Double], Option[Double], Option[Double]]("least")
 
   private[this] def filterClosedEtablissements(row: EtablissementTable): Rep[Boolean] =
-    row.etatAdministratifEtablissement.getOrElse("A") =!= "F"
+    row.etatAdministratifEtablissement.getOrElse(Open) =!= Closed
 
   override def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] = {
 
@@ -73,7 +75,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySirets(
-      sirets: List[SIRET]
+      sirets: List[Siret]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
@@ -86,15 +88,16 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiretIncludingHeadOfficeWithActivity(
-      siret: SIRET
+      siret: Siret,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
-        .filter(_.siren === SIREN(siret))
+        .filter(_.siren === Siren(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
-        .filter(filterClosedEtablissements)
+        .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
@@ -102,13 +105,14 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiren(
-      siren: SIREN
+      siren: Siren,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siren === siren)
         .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(filterClosedEtablissements)
+        .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
@@ -117,14 +121,15 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchHeadOfficeBySiren(
-      siren: SIREN
+      siren: Siren,
+      openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
         .filter(_.siren === siren)
         .filter(_.etablissementSiege === "true")
         .filter(_.denominationUsuelleEtablissement.isDefined)
-        .filter(filterClosedEtablissements)
+        .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)

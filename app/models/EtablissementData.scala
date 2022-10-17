@@ -1,5 +1,6 @@
 package models
 
+import models.EtablissementData.Open
 import models.api.Address
 import models.api.EtablissementSearchResult
 import models.insee.etablissement.DisclosedStatus
@@ -11,8 +12,8 @@ import java.util.UUID
 
 case class EtablissementData(
     id: UUID = UUID.randomUUID(),
-    siret: SIRET,
-    siren: SIREN,
+    siret: Siret,
+    siren: Siren,
     dateDernierTraitementEtablissement: Option[String],
     etablissementSiege: Option[String],
     complementAdresseEtablissement: Option[String],
@@ -33,6 +34,9 @@ case class EtablissementData(
     etatAdministratifEtablissement: Option[String],
     statutDiffusionEtablissement: DisclosedStatus
 ) {
+
+  def isOpen = this.etatAdministratifEtablissement.getOrElse(Open) == Open
+
   def toAddress(): Address = Address(
     number = numeroVoieEtablissement,
     street = Option(
@@ -84,4 +88,6 @@ case class EtablissementData(
 object EtablissementData {
   implicit val format: OFormat[EtablissementData] = Json.format[EtablissementData]
   type EtablissementWithActivity = (EtablissementData, Option[ActivityCode])
+  val Closed = "F"
+  val Open = "A"
 }

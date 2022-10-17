@@ -33,11 +33,18 @@ object ApiError {
     override val details: String = s"Le corps de la requête ne correspond pas à ce qui est attendu par l'API."
   }
 
-  final case class MalformedSIRET(InvalidSIRET: String) extends BadRequestError {
+  final case class MalformedSiret(InvalidSiret: String) extends BadRequestError {
     override val `type`: String = "SC-0003"
     override val title: String = "Malformed SIRET"
     override val details: String =
-      s"Malformed SIRET : $InvalidSIRET"
+      s"Malformed SIRET : $InvalidSiret"
+  }
+
+  final case class MalformedSiren(InvalidSIREN: String) extends BadRequestError {
+    override val `type`: String = "SC-0007"
+    override val title: String = "Malformed SIREN"
+    override val details: String =
+      s"Malformed SIREN : $InvalidSIREN"
   }
 
   final case class MalformedId(id: String) extends BadRequestError {

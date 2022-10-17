@@ -1,13 +1,13 @@
 package models.api
 
-import models.SIRET
+import models.Siret
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
 import java.time.OffsetDateTime
 
 case class EtablissementSearchResult(
-    siret: SIRET,
+    siret: Siret,
     name: Option[String],
     brand: Option[String],
     isHeadOffice: Boolean,

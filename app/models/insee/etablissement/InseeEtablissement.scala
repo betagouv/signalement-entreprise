@@ -1,13 +1,13 @@
 package models.insee.etablissement
 
-import models.SIREN
-import models.SIRET
+import models.Siren
+import models.Siret
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
 case class InseeEtablissement(
-    siret: SIRET,
-    siren: SIREN,
+    siret: Siret,
+    siren: Siren,
     nic: String,
     statutDiffusionEtablissement: String,
     dateCreationEtablissement: Option[String],
