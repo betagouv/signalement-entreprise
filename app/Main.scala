@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import config.SignalConsoConfiguration.HashedTokenReader
-class Main() extends ApplicationLoader {
+class Main extends ApplicationLoader {
   var components: SignalConsoComponents = _
 
   override def load(context: ApplicationLoader.Context): Application = {

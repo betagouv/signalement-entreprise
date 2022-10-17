@@ -1,12 +1,14 @@
 package orchestrators
 
 import models.api.EtablissementSearchResult
+import models.EtablissementData.EtablissementWithActivity
 import models.SIREN
 import models.SIRET
-
+import models.insee.etablissement.DisclosedStatus
 import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 
+import java.time.OffsetDateTime
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -47,11 +49,38 @@ class EtablissementService(
     )
   }
 
-  def getBySiret(sirets: List[SIRET]): Future[List[EtablissementSearchResult]] =
-    etablissementRepository
-      .searchBySirets(sirets)
-      .map(_.map { case (etablissementData, maybeActivity) =>
-        etablissementData.toSearchResult(activityLabel = maybeActivity.map(_.label), filterAdress = false)
-      })
+  def getBySiret(sirets: List[SIRET], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =
+    for {
+      etablissementList <- etablissementRepository
+        .searchBySirets(sirets)
+      filteredList = filterUpdatedOnlyEtablissement(etablissementList, lastUpdated)
+      etablissementSearchResultList = filteredList.map { case (etablissementData, maybeActivity) =>
+        etablissementData.toSearchResult(maybeActivity.map(_.label), filterAdress = false)
+      }
+    } yield etablissementSearchResultList
+
+  private def filterUpdatedOnlyEtablissement(
+      etablissementList: List[EtablissementWithActivity],
+      lastUpdated: Option[OffsetDateTime]
+  ): List[EtablissementWithActivity] =
+    etablissementList.filter {
+      case (etablissement, _) if etablissement.statutDiffusionEtablissement == DisclosedStatus.NonPublic => true
+      case (etablissement, _) =>
+        val maybeEtablissementLastUpdated: Option[OffsetDateTime] =
+          toOffsetDateTime(etablissement.dateDernierTraitementEtablissement)
+        etablissementHasChangedAfterLastUpdated(maybeEtablissementLastUpdated, lastUpdated)
+    }
+
+  private def etablissementHasChangedAfterLastUpdated(
+      maybeEtablissementLastUpdated: Option[OffsetDateTime],
+      maybeFilterLastUpdated: Option[OffsetDateTime]
+  ): Boolean =
+    (maybeEtablissementLastUpdated, maybeFilterLastUpdated) match {
+      case (Some(etablissementLastUpdated), Some(filterLastUpdated))
+          if etablissementLastUpdated.isAfter(filterLastUpdated) =>
+        true
+      case (_, None) => true
+      case _         => false
+    }
 
 }
