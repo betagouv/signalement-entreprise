@@ -53,8 +53,8 @@ class EtablissementService(
   }
 
   def searchEtablissementBySiren(
-                                  siren: SIREN,
-                                  openCompaniesOnly: Boolean
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     for {
       maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)

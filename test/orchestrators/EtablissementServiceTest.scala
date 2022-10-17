@@ -91,18 +91,18 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
         Future.successful(searchBySiretsFunc)
 
       override def searchBySiretIncludingHeadOfficeWithActivity(
-                                                                 siret: SIRET,
-                                                                 openCompaniesOnly: Boolean
+          siret: SIRET,
+          openCompaniesOnly: Boolean
       ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
       override def searchBySiren(
-                                  siren: SIREN,
-                                  openCompaniesOnly: Boolean
+          siren: SIREN,
+          openCompaniesOnly: Boolean
       ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
       override def searchHeadOfficeBySiren(
-                                            siren: SIREN,
-                                            openCompaniesOnly: Boolean
+          siren: SIREN,
+          openCompaniesOnly: Boolean
       ): Future[Option[(EtablissementData, Option[ActivityCode])]] =
         ???
     }
@@ -111,9 +111,9 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
   }
 
   def genEtablissement(
-                        siret: SIRET,
-                        disclosedStatus: DisclosedStatus,
-                        dernierTraitementEtablissement: Option[String]
+      siret: SIRET,
+      disclosedStatus: DisclosedStatus,
+      dernierTraitementEtablissement: Option[String]
   ): (EtablissementData, Option[ActivityCode]) =
     (
       new EtablissementData(

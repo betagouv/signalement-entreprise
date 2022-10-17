@@ -18,18 +18,18 @@ trait EtablissementRepositoryInterface {
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySiretIncludingHeadOfficeWithActivity(
-                                                    siret: SIRET,
-                                                    openCompaniesOnly: Boolean
+      siret: SIRET,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySiren(
-                     siren: SIREN,
-                     openCompaniesOnly: Boolean
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchHeadOfficeBySiren(
-                               siren: SIREN,
-                               openCompaniesOnly: Boolean
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]]
 
 }

@@ -6,21 +6,21 @@ import play.api.libs.json.Json
 import play.api.libs.json.OFormat
 
 case class InseeEtablissement(
-                               siret: SIRET,
-                               siren: SIREN,
-                               nic: String,
-                               statutDiffusionEtablissement: String,
-                               dateCreationEtablissement: Option[String],
-                               trancheEffectifsEtablissement: Option[String],
-                               anneeEffectifsEtablissement: Option[String],
-                               activitePrincipaleRegistreMetiersEtablissement: Option[String],
-                               dateDernierTraitementEtablissement: Option[String],
-                               etablissementSiege: Boolean,
-                               nombrePeriodesEtablissement: Int,
-                               uniteLegale: UniteLegale,
-                               adresseEtablissement: AdresseEtablissement,
-                               adresse2Etablissement: Option[Adresse2Etablissement],
-                               periodesEtablissement: List[PeriodeEtablissement]
+    siret: SIRET,
+    siren: SIREN,
+    nic: String,
+    statutDiffusionEtablissement: String,
+    dateCreationEtablissement: Option[String],
+    trancheEffectifsEtablissement: Option[String],
+    anneeEffectifsEtablissement: Option[String],
+    activitePrincipaleRegistreMetiersEtablissement: Option[String],
+    dateDernierTraitementEtablissement: Option[String],
+    etablissementSiege: Boolean,
+    nombrePeriodesEtablissement: Int,
+    uniteLegale: UniteLegale,
+    adresseEtablissement: AdresseEtablissement,
+    adresse2Etablissement: Option[Adresse2Etablissement],
+    periodesEtablissement: List[PeriodeEtablissement]
 ) {
 
   def lastPeriodeEtablissement: Option[PeriodeEtablissement] =

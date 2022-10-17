@@ -5,7 +5,7 @@ import play.api.Logger
 import play.api.libs.json._
 import repositories.PostgresProfile.api._
 
-case class SIREN private(value: String) extends AnyVal {
+case class SIREN private (value: String) extends AnyVal {
   override def toString = value
 }
 

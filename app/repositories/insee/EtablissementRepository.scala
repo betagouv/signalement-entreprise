@@ -88,8 +88,8 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiretIncludingHeadOfficeWithActivity(
-                                                             siret: SIRET,
-                                                             openCompaniesOnly: Boolean
+      siret: SIRET,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
@@ -105,8 +105,8 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchBySiren(
-                              siren: SIREN,
-                              openCompaniesOnly: Boolean
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
@@ -121,8 +121,8 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     )
 
   override def searchHeadOfficeBySiren(
-                                        siren: SIREN,
-                                        openCompaniesOnly: Boolean
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]] =
     db.run(
       table
