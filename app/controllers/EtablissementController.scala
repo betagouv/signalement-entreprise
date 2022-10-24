@@ -31,10 +31,10 @@ class EtablissementController(
       .recover { case err => handleError(request, err) }
   }
 
-  def searchEtablissementByIdentity(identity: String, withClosed: Option[Boolean]) = Action.async { request =>
+  def searchEtablissementByIdentity(identity: String, openOnly: Option[Boolean]) = Action.async { request =>
     logger.debug(s"searchEtablissementByIdentity $identity")
     etablissementOrchestrator
-      .searchEtablissementByIdentity(identity, withClosed)
+      .searchEtablissementByIdentity(identity, openOnly)
       .map(res => Ok(Json.toJson(res)))
       .recover { case err => handleError(request, err) }
   }
