@@ -60,12 +60,6 @@ class EtablissementService(
       maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
       etablissements <- maybeHeadOffice match {
         case Some(openHeadOffice) if openHeadOffice._1.isOpen => Future.successful(List(openHeadOffice))
-        // ToDO etablissementRepository
-        //            .searchBySiren(siren, openCompaniesOnly) is already returning head offices ??
-        case Some(closedHeadOffice) if !openCompaniesOnly =>
-          etablissementRepository
-            .searchBySiren(siren, openCompaniesOnly)
-            .map(companyList => companyList :+ closedHeadOffice)
         case _ => etablissementRepository.searchBySiren(siren, openCompaniesOnly)
       }
 

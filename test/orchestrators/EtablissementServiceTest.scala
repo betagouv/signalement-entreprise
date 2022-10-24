@@ -9,7 +9,6 @@ import models.insee.etablissement.DisclosedStatus
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import scala.collection.immutable.List
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -114,33 +113,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       res.map(_.siret) shouldEqual List(siret)
     }
 
-    "return closed headOffice from siren identity when there is only a closed headoffice" in {
-
-      val siret = SIRET.fromUnsafe("11111111111111")
-      val siren = SIREN.apply(siret)
-
-      val etablissement =
-        genEtablissement(
-          siret,
-          DisclosedStatus.Public,
-          pastDate,
-          isHeadOffice = Some("true"),
-          isOpen = Some(EtablissementData.Closed)
-        )
-
-      val searchHeadOfficeBySiren = Some(etablissement)
-
-      val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren)
-
-      import env._
-      val res = Await.result(
-        service.searchEtablissementByIdentity(siren.value, openOnly = Some(false)),
-        Duration.Inf
-      )
-      res.map(_.siret) shouldEqual List(siret)
-    }
-
-    " return empty list from search on open only company given siren identity when there is only a closed headoffice " in {
+    "return empty list from search on open only company given siren identity when there is only a closed headoffice " in {
 
       val siret = SIRET.fromUnsafe("11111111111111")
       val siren = SIREN.apply(siret)
@@ -166,7 +139,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       res.map(_.siret) shouldEqual List.empty
     }
 
-    "return closed headOffice with subcompanies from siren identity" in {
+    "return  list from search when no headOffice found " in {
 
       val siret = SIRET.fromUnsafe("11111111111111")
       val siren = SIREN.apply(siret)
@@ -176,17 +149,17 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
           siret,
           DisclosedStatus.Public,
           pastDate,
-          isHeadOffice = Some("true"),
+          isHeadOffice = Some("false"),
           isOpen = Some(EtablissementData.Closed)
         )
 
-      val searchHeadOfficeBySiren = Some(etablissement)
+      val searchBySiren = List(etablissement)
 
-      val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren)
+      val env = genEnv(searchBySirenFunc = searchBySiren)
 
       import env._
       val res = Await.result(
-        service.searchEtablissementByIdentity(siren.value, openOnly = Some(false)),
+        service.searchEtablissementByIdentity(siren.value, openOnly = Some(true)),
         Duration.Inf
       )
       res.map(_.siret) shouldEqual List(siret)
@@ -196,6 +169,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
   def genEnv(
       searchBySiretsFunc: List[(EtablissementData, Option[ActivityCode])] = List.empty,
+      searchBySirenFunc: List[(EtablissementData, Option[ActivityCode])] = List.empty,
       searchBySiretWithHeadOffice: List[(EtablissementData, Option[ActivityCode])] = List.empty,
       searchHeadOfficeBySiren: Option[(EtablissementData, Option[ActivityCode])] = None
   ) = new {
@@ -204,6 +178,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
     val repo = new EtablissementRepositoryInterfaceMock(
       searchBySiretsFunc = searchBySiretsFunc,
+      searchBySirenFunc = searchBySirenFunc,
       searchBySiretWithHeadOfficeFunc = searchBySiretWithHeadOffice,
       searchHeadOfficeBySirenFunc = searchHeadOfficeBySiren
     )
