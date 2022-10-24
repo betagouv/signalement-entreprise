@@ -17,7 +17,7 @@ trait EtablissementRepositoryInterface {
       sirets: List[SIRET]
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
-  def searchBySiretIncludingHeadOfficeWithActivity(
+  def searchBySiretWithHeadOffice(
       siret: SIRET,
       openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]]

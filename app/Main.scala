@@ -67,7 +67,7 @@ class SignalConsoComponents(
       applicationConfiguration.app
     )
 
-  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
+  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.SECONDS), interval = 1.day) { () =>
     etablissementService.importEtablissement()
     ()
   }

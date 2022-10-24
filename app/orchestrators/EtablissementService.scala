@@ -36,7 +36,7 @@ class EtablissementService(
     for {
       etablissementsWithActivity <- extractIdentity(identity) match {
         case Some(Right(siret)) =>
-          etablissementRepository.searchBySiretIncludingHeadOfficeWithActivity(siret, openCompaniesOnly)
+          etablissementRepository.searchBySiretWithHeadOffice(siret, openCompaniesOnly)
         case Some(Left(siren)) => searchEtablissementBySiren(siren, openCompaniesOnly)
         case None              => Future.successful(List.empty)
       }
@@ -58,11 +58,17 @@ class EtablissementService(
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
     for {
       maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
-      maybeOpenHeadOffice = maybeHeadOffice.filter(_._1.isOpen)
-      etablissements <-
-        maybeOpenHeadOffice
-          .map(company => Future.successful(List(company)))
-          .getOrElse(etablissementRepository.searchBySiren(siren, openCompaniesOnly))
+      etablissements <- maybeHeadOffice match {
+        case Some(openHeadOffice) if openHeadOffice._1.isOpen => Future.successful(List(openHeadOffice))
+        // ToDO etablissementRepository
+        //            .searchBySiren(siren, openCompaniesOnly) is already returning head offices ??
+        case Some(closedHeadOffice) if !openCompaniesOnly =>
+          etablissementRepository
+            .searchBySiren(siren, openCompaniesOnly)
+            .map(companyList => companyList :+ closedHeadOffice)
+        case _ => etablissementRepository.searchBySiren(siren, openCompaniesOnly)
+      }
+
     } yield etablissements
 
   def getBySiret(sirets: List[SIRET], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =

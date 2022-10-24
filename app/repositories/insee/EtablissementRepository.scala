@@ -87,7 +87,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         .result
     )
 
-  override def searchBySiretIncludingHeadOfficeWithActivity(
+  override def searchBySiretWithHeadOffice(
       siret: SIRET,
       openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
