@@ -17,14 +17,19 @@ trait EtablissementRepositoryInterface {
       sirets: List[SIRET]
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
-  def searchBySiretIncludingHeadOfficeWithActivity(
-      siret: SIRET
+  def searchBySiretWithHeadOffice(
+      siret: SIRET,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySiren(
-      siren: SIREN
+      siren: SIREN,
+      openCompaniesOnly: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
-  def searchHeadOfficeBySiren(siren: SIREN): Future[Option[(EtablissementData, Option[ActivityCode])]]
+  def searchHeadOfficeBySiren(
+      siren: SIREN,
+      openCompaniesOnly: Boolean
+  ): Future[Option[(EtablissementData, Option[ActivityCode])]]
 
 }

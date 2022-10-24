@@ -2,6 +2,8 @@ package orchestrators
 
 import models.api.EtablissementSearchResult
 import models.EtablissementData.EtablissementWithActivity
+import models.ActivityCode
+import models.EtablissementData
 import models.SIREN
 import models.SIRET
 import models.insee.etablissement.DisclosedStatus
@@ -25,29 +27,43 @@ class EtablissementService(
       .map(results => results.map(result => result._1.toSearchResult(result._2.map(_.label))))
   }
 
-  def searchEtablissementByIdentity(identity: String): Future[List[EtablissementSearchResult]] = {
+  def searchEtablissementByIdentity(
+      identity: String,
+      openOnly: Option[Boolean]
+  ): Future[List[EtablissementSearchResult]] = {
+    val openCompaniesOnly = openOnly.getOrElse(true)
     logger.debug(s"searchEtablissementByIdentity $identity")
-    (identity.replaceAll("\\s", "") match {
-      case q if q.matches(SIRET.pattern) =>
-        etablissementRepository.searchBySiretIncludingHeadOfficeWithActivity(SIRET(q))
-      case q =>
-        SIREN.pattern.r
-          .findFirstIn(q)
-          .map(siren =>
-            for {
-              headOffice <- etablissementRepository.searchHeadOfficeBySiren(SIREN(siren))
-              etablissements <- headOffice
-                .map(company => Future(List(company)))
-                .getOrElse(etablissementRepository.searchBySiren(SIREN(siren)))
-            } yield etablissements
-          )
-          .getOrElse(Future(List.empty))
-    }).map(etablissementsWithActivity =>
-      etablissementsWithActivity.map { case (company, activity) =>
+    for {
+      etablissementsWithActivity <- extractIdentity(identity) match {
+        case Some(Right(siret)) =>
+          etablissementRepository.searchBySiretWithHeadOffice(siret, openCompaniesOnly)
+        case Some(Left(siren)) => searchEtablissementBySiren(siren, openCompaniesOnly)
+        case None              => Future.successful(List.empty)
+      }
+      searchResult = etablissementsWithActivity.map { case (company, activity) =>
         company.toSearchResult(activity.map(_.label))
       }
-    )
+    } yield searchResult
   }
+
+  def extractIdentity(identity: String): Option[Either[SIREN, SIRET]] = (SIRET(identity), SIREN(identity)) match {
+    case (Some(siret), _)    => Some(Right(siret))
+    case (None, Some(siren)) => Some(Left(siren))
+    case _                   => None
+  }
+
+  def searchEtablissementBySiren(
+      siren: SIREN,
+      openCompaniesOnly: Boolean
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] =
+    for {
+      maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
+      etablissements <- maybeHeadOffice match {
+        case Some(openHeadOffice) if openHeadOffice._1.isOpen => Future.successful(List(openHeadOffice))
+        case _ => etablissementRepository.searchBySiren(siren, openCompaniesOnly)
+      }
+
+    } yield etablissements
 
   def getBySiret(sirets: List[SIRET], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =
     for {
