@@ -1,4 +1,5 @@
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.8.16")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.8.17")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.1")
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.3.3")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.4")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.4.1")
+addSbtPlugin("com.github.cb372" % "sbt-explicit-dependencies" % "0.2.16")

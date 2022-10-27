@@ -6,18 +6,19 @@ object Dependencies {
   object Versions {
 
     lazy val playSlickVersion = "5.0.2"
-    lazy val slickPgVersion = "0.20.3"
-    lazy val sentryVersion = "5.7.4"
+    lazy val slickPgVersion = "0.20.4"
+    lazy val sentryVersion = "6.4.1"
     lazy val specs2MatcherExtraVersion = "4.10.5"
     lazy val scalaCheckVersion = "1.16.0"
     lazy val catsCoreVersion = "2.8.0"
     lazy val pureConfigVersion = "0.17.1"
     lazy val jacksonModuleScalaVersion = "2.13.3"
     lazy val enumeratumVersion = "1.7.0"
-    lazy val postgresqlVersion = "42.3.6"
-    lazy val refinedVersion = "0.9.29"
-    lazy val chimneyVersion = "0.6.1"
+    lazy val postgresqlVersion = "42.3.7"
+    lazy val refinedVersion = "0.10.1"
+    lazy val chimneyVersion = "0.6.2"
     lazy val sttp = "3.7.2"
+    lazy val sttpPlayJson = "3.7.6"
 
   }
 
@@ -29,7 +30,7 @@ object Dependencies {
   }
 
   object Compile {
-    val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % "3.7.2"
+    val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % Versions.sttpPlayJson
     val sttp = "com.softwaremill.sttp.client3" %% "core" % Versions.sttp
     val sentry = "io.sentry" % "sentry-logback" % Versions.sentryVersion
     val catsCore = "org.typelevel" %% "cats-core" % Versions.catsCoreVersion
