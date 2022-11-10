@@ -44,13 +44,19 @@ class EtablissementImportService(
         )
         _ <- entrepriseImportRepository.updateEndedAt(batchInfo.id)
         _ = logger.info(s"Job ended successfully")
-      } yield ()).recoverWith { case e =>
-        logger.error("Error on import", e)
-        entrepriseImportRepository
-          .updateError(batchInfo.id, error = s"${e.getMessage} : ${e.getCause}")
-          .flatMap(_ => Future.failed(e))
+      } yield ()).recoverWith {
+        case e: EtablissementJobAleadyRunningError =>
+          logger.warn("Cannot run job", e)
+          updateError(batchInfo.id, e)
+        case e =>
+          logger.error("Error on import", e)
+          updateError(batchInfo.id, e)
       }
     }
+
+  def updateError(batchId: UUID, e: Throwable): Future[Unit] = entrepriseImportRepository
+    .updateError(batchId, error = s"${e.getMessage} : ${e.getCause}")
+    .flatMap(_ => Future.failed[Unit](e))
 
   private def validateIfRunning(current: UUID): Future[Unit] =
     for {
