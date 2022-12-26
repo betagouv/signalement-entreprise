@@ -7,7 +7,6 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be
     # executed as part of the job
     steps:
@@ -16,7 +15,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: temurin
-          java-version: 11
+          java-version: 17
           cache: 'sbt'
       - name: Build and Test
-        run: sbt -v +test
+        run: sbt scalafmtCheck scalafmtSbtCheck -v +test
