@@ -5,19 +5,19 @@ import sbt._
 object Dependencies {
   object Versions {
 
-    lazy val playSlickVersion = "5.0.2"
-    lazy val slickPgVersion = "0.20.3"
-    lazy val sentryVersion = "5.7.4"
+    lazy val playSlickVersion = "5.1.0"
+    lazy val slickPgVersion = "0.21.1"
+    lazy val sentryVersion = "6.10.0"
     lazy val specs2MatcherExtraVersion = "4.10.5"
-    lazy val scalaCheckVersion = "1.16.0"
-    lazy val catsCoreVersion = "2.8.0"
-    lazy val pureConfigVersion = "0.17.1"
-    lazy val jacksonModuleScalaVersion = "2.13.3"
-    lazy val enumeratumVersion = "1.7.0"
-    lazy val postgresqlVersion = "42.3.6"
-    lazy val refinedVersion = "0.9.29"
-    lazy val chimneyVersion = "0.6.1"
-    lazy val sttp = "3.7.2"
+    lazy val scalaCheckVersion = "1.17.0"
+    lazy val catsCoreVersion = "2.9.0"
+    lazy val pureConfigVersion = "0.17.2"
+    lazy val jacksonModuleScalaVersion = "2.14.1"
+    lazy val enumeratumVersion = "1.7.2"
+    lazy val postgresqlVersion = "42.5.1"
+    lazy val refinedVersion = "0.10.1"
+    lazy val chimneyVersion = "0.6.2"
+    lazy val sttp = "3.8.5"
 
   }
 
