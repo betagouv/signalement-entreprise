@@ -18,7 +18,7 @@ object Dependencies {
     lazy val refinedVersion = "0.10.1"
     lazy val chimneyVersion = "0.6.2"
     lazy val sttp = "3.8.5"
-    lazy val flyWayVersion       = "9.10.2"
+    lazy val flyWayVersion = "9.10.2"
 
   }
 
