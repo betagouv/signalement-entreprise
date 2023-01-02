@@ -9,7 +9,7 @@ https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/item-info.
 
 ### PostgreSQL
 
-L'application requiert une connexion à un serveur PostgreSQL 
+L'application requiert une connexion à un serveur PostgreSQL
 
 Il est possible de lancer un PostgreSQL à partir d'une commande docker-compose (le fichier en question est disponible
 sous scripts/local/)
@@ -21,9 +21,21 @@ docker-compose -f scripts/local/docker-compose.yml up
 
 ```
 
-Au lancement du programme, les tables seront automatiquement créées si elles n'existent pas (
-voir [https://www.playframework.com/documentation/2.8.x/Evolutions]  **et s'assurer que les properties play.evolutions
-sont a true**).
+
+#### Script de migration
+
+Le projet utilise l'outil flyway (https://flywaydb.org/) pour la gestion des scripts de migration.
+
+Les scripts de migration sont lancés au run de l'application, ils sont disponibles dans le repertoire conf/db/migration/default.
+
+**Warning** Important
+
+Un script doit impérativement être écrit de manière à ce que l'application fonctionne toujours en cas de rollback de l'application.
+
+Ceci afin de ne pas avoir gérer de procédure de rollback complexe :
+Avoir l'ancienne la structure de données et la nouvelle qui fonctionnent en parralèle puis un certain temps après supprimer l'ancienne structure.
+
+Cette méthode est recommandée par flyway et est décrite sur le lien suivant : https://documentation.red-gate.com/fd/rollback-guidance-138347143.html
 
 
 
@@ -78,28 +90,31 @@ L'API est accessible à l'adresse `http://localhost:9000/api` avec rechargement 
 
 ## Variables d'environnement
 
-| Nom                  | Description                                                                                                                                                                            | Valeur par défaut |
-|:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------|
-| INSEE_KEY            | Identifiant pour communiquer avec l'API de l'insee                                                                                                                                     ||
-| INSEE_SECRET         | Secret pour communiquer avec l'API de l'insee                                                                                                                                          ||
-| APPLICATION_SECRET   | Clé secrète de l'application                                                                                                                                                           ||
-| AUTHENTICATION_TOKEN | Token hashé qui sert à communiquer avec l'API signal conso pour la Maj entreprise                                                                                                      ||
-| FILTER_NON_DISCLOSED | Les API publiques d'entreprises exposées pour le site ne renvoient plus les entreprises privées (feature flag en cas de disfonctionnement pour éviter d'exposer des données sensibles) ||
-| PUBLIC_DATA_ONLY     | Récupération via l'INSEE des données entreprise publiques seulement  (utile pour la base de test pour ne pas avoir de données sensibles)                                               | true              |
----
+| Nom                          | Description                                                                                                                                                                            | Valeur par défaut |
+|:-----------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------|
+| INSEE_KEY                    | Identifiant pour communiquer avec l'API de l'insee                                                                                                                                     ||
+| INSEE_SECRET                 | Secret pour communiquer avec l'API de l'insee                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_URI         | Full database url                                                                                                                                                                      |                   |
+| POSTGRESQL_ADDON_DIRECT_HOST | Database host                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_DIRECT_PORT | Database port                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_DB          | Database name                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_USER        | Database user                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_PASSWORD    | Database password                                                                                                                                                                      |                   |
+| APPLICATION_SECRET           | Clé secrète de l'application                                                                                                                                                           ||
+| AUTHENTICATION_TOKEN         | Token hashé qui sert à communiquer avec l'API signal conso pour la Maj entreprise                                                                                                      ||
+| FILTER_NON_DISCLOSED         | Les API publiques d'entreprises exposées pour le site ne renvoient plus les entreprises privées (feature flag en cas de disfonctionnement pour éviter d'exposer des données sensibles) ||
+| PUBLIC_DATA_ONLY             | Récupération via l'INSEE des données entreprise publiques seulement  (utile pour la base de test pour ne pas avoir de données sensibles)                                               | true              |
 
+---
 
 ## Connection avec Insee
 
 La connection avec l'INSEE se fait grace à une paire clé/secret contenue dans les variables INSEE_KEY et INSEE_SECRET.
 
-Il possible d'invalider / regénérer les clés en allant sur le site de l'insee https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/applications.jag
-
-
+Il possible d'invalider / regénérer les clés en allant sur le site de
+l'insee https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/applications.jag
 
 ## Création d'un token machine pour la synchronisation des entreprises avec signal conso
-
-
 
 ```scala
 

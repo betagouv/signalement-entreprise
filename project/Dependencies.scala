@@ -18,6 +18,7 @@ object Dependencies {
     lazy val refinedVersion = "0.10.1"
     lazy val chimneyVersion = "0.6.2"
     lazy val sttp = "3.8.5"
+    lazy val flyWayVersion       = "9.10.2"
 
   }
 
@@ -29,13 +30,13 @@ object Dependencies {
   }
 
   object Compile {
+    val flyWayVersion = "org.flywaydb" % "flyway-core" % Versions.flyWayVersion
     val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % "3.7.2"
     val sttp = "com.softwaremill.sttp.client3" %% "core" % Versions.sttp
     val sentry = "io.sentry" % "sentry-logback" % Versions.sentryVersion
     val catsCore = "org.typelevel" %% "cats-core" % Versions.catsCoreVersion
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfigVersion
     val playSlick = "com.typesafe.play" %% "play-slick" % Versions.playSlickVersion
-    val playSlickEvolutions = "com.typesafe.play" %% "play-slick-evolutions" % Versions.playSlickVersion
     val slickPg = "com.github.tminglei" %% "slick-pg" % Versions.slickPgVersion
     val slickPgPlayJson = "com.github.tminglei" %% "slick-pg_play-json" % Versions.slickPgVersion
     val jacksonModuleScala =
@@ -55,7 +56,6 @@ object Dependencies {
     Compile.catsCore,
     Compile.pureConfig,
     Compile.playSlick,
-    Compile.playSlickEvolutions,
     Compile.enumeratum,
     Compile.enumeratumPlay,
     Compile.slickPg,
@@ -65,6 +65,7 @@ object Dependencies {
     Compile.refinded,
     Compile.chimney,
     Compile.argon2Jvm,
+    Compile.flyWayVersion,
     Test.specs2Import,
     Test.specs2MatcherExtra,
     Test.scalaCheck
