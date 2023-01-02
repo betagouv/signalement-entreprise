@@ -31,7 +31,7 @@ object Dependencies {
 
   object Compile {
     val flyWayVersion = "org.flywaydb" % "flyway-core" % Versions.flyWayVersion
-    val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % "3.7.2"
+    val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % Versions.sttp
     val sttp = "com.softwaremill.sttp.client3" %% "core" % Versions.sttp
     val sentry = "io.sentry" % "sentry-logback" % Versions.sentryVersion
     val catsCore = "org.typelevel" %% "cats-core" % Versions.catsCoreVersion
