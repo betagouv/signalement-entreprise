@@ -60,8 +60,8 @@ function scsbt {
   AUTHENTICATION_TOKEN="XXX" \
   APPLICATION_SECRET="XXX" \
   POSTGRESQL_ADDON_URI="XXX" \
-  POSTGRESQL_ADDON_DIRECT_HOST=="XXX" \
-  POSTGRESQL_ADDON_DIRECT_PORT=="XXX" \
+  POSTGRESQL_ADDON_HOST=="XXX" \
+  POSTGRESQL_ADDON_PORT=="XXX" \
   POSTGRESQL_ADDON_DB=="XXX" \
   POSTGRESQL_ADDON_USER=="XXX" \
   POSTGRESQL_ADDON_PASSWORD=="XXX" \
@@ -100,8 +100,8 @@ L'API est accessible à l'adresse `http://localhost:9000/api` avec rechargement 
 | INSEE_KEY                    | Identifiant pour communiquer avec l'API de l'insee                                                                                                                                     ||
 | INSEE_SECRET                 | Secret pour communiquer avec l'API de l'insee                                                                                                                                          |                   |
 | POSTGRESQL_ADDON_URI         | Full database url                                                                                                                                                                      |                   |
-| POSTGRESQL_ADDON_DIRECT_HOST | Database host                                                                                                                                                                          |                   |
-| POSTGRESQL_ADDON_DIRECT_PORT | Database port                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_HOST | Database host                                                                                                                                                                          |                   |
+| POSTGRESQL_ADDON_PORT | Database port                                                                                                                                                                          |                   |
 | POSTGRESQL_ADDON_DB          | Database name                                                                                                                                                                          |                   |
 | POSTGRESQL_ADDON_USER        | Database user                                                                                                                                                                          |                   |
 | POSTGRESQL_ADDON_PASSWORD    | Database password                                                                                                                                                                      |                   |
