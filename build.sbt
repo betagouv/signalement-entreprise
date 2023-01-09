@@ -8,7 +8,6 @@ scalaVersion := "2.13.8"
 lazy val `signalement-entreprise` = (project in file(".")).enablePlugins(PlayScala)
 
 libraryDependencies ++= Seq(
-  evolutions,
   ws,
   ehcache,
   compilerPlugin(scalafixSemanticdb)

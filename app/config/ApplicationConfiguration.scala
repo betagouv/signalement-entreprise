@@ -1,5 +1,6 @@
 package config
 
 case class ApplicationConfiguration(
-    app: SignalConsoConfiguration
+    app: SignalConsoConfiguration,
+    flyway: FlywayConfiguration
 )

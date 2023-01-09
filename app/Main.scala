@@ -3,8 +3,6 @@ import _root_.controllers._
 import config.ApplicationConfiguration
 import orchestrators._
 import play.api._
-import play.api.db.evolutions.EvolutionsComponents
-import play.api.db.slick.evolutions.SlickEvolutionsComponents
 import play.api.db.slick.DbName
 import play.api.db.slick.SlickComponents
 import play.api.libs.ws.ahc.AhcWSComponents
@@ -18,10 +16,12 @@ import repositories.insee.EtablissementRepository
 import repositories.insee.EtablissementRepositoryInterface
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
+
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import config.SignalConsoConfiguration.HashedTokenReader
+import org.flywaydb.core.Flyway
 class Main extends ApplicationLoader {
   var components: SignalConsoComponents = _
 
@@ -40,13 +40,25 @@ class SignalConsoComponents(
     with HttpFiltersComponents
     with play.filters.cors.CORSComponents
     with AhcWSComponents
-    with SlickComponents
-    with SlickEvolutionsComponents
-    with EvolutionsComponents {
-
-  applicationEvolutions
+    with SlickComponents {
 
   val applicationConfiguration: ApplicationConfiguration = ConfigSource.default.loadOrThrow[ApplicationConfiguration]
+
+  // Run database migration scripts
+  Flyway
+    .configure()
+    .dataSource(
+      applicationConfiguration.flyway.jdbcUrl,
+      applicationConfiguration.flyway.user,
+      applicationConfiguration.flyway.password
+    )
+    // DATA_LOSS / DESTRUCTIVE / BE AWARE ---- Keep to "false"
+    // Be careful when enabling this as it removes the safety net that ensures Flyway does not migrate the wrong database in case of a configuration mistake!
+    // This is useful for initial Flyway production deployments on projects with an existing DB.
+    // See https://flywaydb.org/documentation/configuration/parameters/baselineOnMigrate for more information
+    .baselineOnMigrate(applicationConfiguration.flyway.baselineOnMigrate)
+    .load()
+    .migrate()
 
   val dbConfig: DatabaseConfig[JdbcProfile] = slickApi.dbConfig[JdbcProfile](DbName("default"))
 
