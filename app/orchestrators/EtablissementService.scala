@@ -80,7 +80,10 @@ class EtablissementService(
       lastUpdated: Option[OffsetDateTime]
   ): List[EtablissementWithActivity] =
     etablissementList.filter {
-      case (etablissement, _) if etablissement.statutDiffusionEtablissement == DisclosedStatus.NonPublic => true
+      case (etablissement, _)
+          if etablissement.statutDiffusionEtablissement == DisclosedStatus.NonPublic ||
+            etablissement.statutDiffusionEtablissement == DisclosedStatus.NonPublicLegacy =>
+        true
       case (etablissement, _) =>
         val maybeEtablissementLastUpdated: Option[OffsetDateTime] =
           toOffsetDateTime(etablissement.dateDernierTraitementEtablissement)
