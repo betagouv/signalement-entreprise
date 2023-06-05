@@ -21,7 +21,7 @@ class EtablissementService(
   val logger: Logger = Logger(this.getClass)
 
   def searchEtablissement(q: String, postalCode: String): Future[List[EtablissementSearchResult]] = {
-    logger.debug(s"searchEtablissement $postalCode $q")
+    logger.info(s"searchEtablissement $postalCode $q")
     etablissementRepository
       .search(q, postalCode)
       .map(results => results.map(result => result._1.toSearchResult(result._2.map(_.label))))

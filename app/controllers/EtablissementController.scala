@@ -1,9 +1,13 @@
 package controllers
 
+import cats.implicits.toShow
+import controllers.EtablissementController.logWhenNoResult
+import controllers.Logs.RichLogger
 import controllers.Token.HashedToken
 import controllers.Token.validateToken
 import controllers.error.AppErrorTransformer.handleError
 import models.SIRET
+import models.api.EtablissementSearchResult
 import orchestrators.EtablissementService
 import play.api.Logger
 import play.api.libs.json._
@@ -24,19 +28,26 @@ class EtablissementController(
   val logger: Logger = Logger(this.getClass)
 
   def searchEtablissement(q: String, postalCode: String) = Action.async { request =>
-    logger.debug(s"searchEtablissement $postalCode $q")
-    etablissementOrchestrator
-      .searchEtablissement(q, postalCode)
-      .map(results => Ok(Json.toJson(results)))
-      .recover { case err => handleError(request, err) }
+    val app = for {
+      results <- etablissementOrchestrator.searchEtablissement(q, postalCode)
+      _ = logWhenNoResult("search_company_postalcode_no_result")(results, Map("postalcode" -> postalCode, "name" -> q))
+    } yield Ok(Json.toJson(results))
+
+    app.recover { case err => handleError(request, err) }
+
   }
 
   def searchEtablissementByIdentity(identity: String, openOnly: Option[Boolean]) = Action.async { request =>
-    logger.debug(s"searchEtablissementByIdentity $identity")
-    etablissementOrchestrator
-      .searchEtablissementByIdentity(identity, openOnly)
-      .map(res => Ok(Json.toJson(res)))
-      .recover { case err => handleError(request, err) }
+    val app = for {
+      results <- etablissementOrchestrator
+        .searchEtablissementByIdentity(identity, openOnly)
+      _ = logWhenNoResult("search_company_identity_no_result")(
+        results,
+        Map("identity" -> identity, "openOnly" -> openOnly.show)
+      )
+    } yield Ok(Json.toJson(results))
+
+    app.recover { case err => handleError(request, err) }
   }
 
   def getBySiret() = Action.async(parse.json) { request =>
@@ -53,4 +64,16 @@ class EtablissementController(
     res.recover { case err => handleError(request, err) }
   }
 
+}
+
+object EtablissementController {
+
+  def logWhenNoResult(key: String)(list: List[EtablissementSearchResult], params: Map[String, String]): Unit =
+    if (list.isEmpty) {
+      logger
+        .infoWithTitle(
+          key,
+          s"No result found with params : ${params})"
+        )
+    } else ()
 }
