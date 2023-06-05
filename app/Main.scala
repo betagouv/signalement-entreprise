@@ -106,6 +106,6 @@ class SignalConsoComponents(
     )
 
   override def httpFilters: Seq[EssentialFilter] =
-    Seq(csrfFilter, securityHeadersFilter, allowedHostsFilter, corsFilter)
+    Seq(new LoggingFilter(), csrfFilter, securityHeadersFilter, allowedHostsFilter, corsFilter)
 
 }

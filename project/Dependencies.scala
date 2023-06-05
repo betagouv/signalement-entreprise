@@ -31,6 +31,9 @@ object Dependencies {
 
   object Compile {
     val flyWayVersion = "org.flywaydb" % "flyway-core" % Versions.flyWayVersion
+    val janino = "org.codehaus.janino" % "janino" % "3.1.9" // Needed for the <if> in logback conf
+    val commonsCompiler = "org.codehaus.janino" % "commons-compiler" % "3.1.9" // Needed for janino
+    val logstashLogBackEncoder = "net.logstash.logback" % "logstash-logback-encoder" % "7.3"
     val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % Versions.sttp
     val sttp = "com.softwaremill.sttp.client3" %% "core" % Versions.sttp
     val sentry = "io.sentry" % "sentry-logback" % Versions.sentryVersion
@@ -50,6 +53,9 @@ object Dependencies {
   }
 
   val AppDependencies = Seq(
+    Compile.janino,
+    Compile.commonsCompiler,
+    Compile.logstashLogBackEncoder,
     Compile.sttp,
     Compile.sttpPlayJson,
     Compile.sentry,
