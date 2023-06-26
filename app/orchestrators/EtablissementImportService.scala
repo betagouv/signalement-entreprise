@@ -158,9 +158,16 @@ class EtablissementImportService(
   private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse) =
     etablissementResponse.etablissements.map { etablissement =>
       val denomination = computeDenomination(etablissement)
-      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination)
+      val nomCommercial = computeNomCommercial(etablissement.uniteLegale, denomination)
+      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, nomCommercial)
       repository.insertOrUpdate(companyData)
     }.sequence
+
+  private[orchestrators] def computeNomCommercial(uniteLegale: UniteLegale, denomination: String): Option[String] =
+    uniteLegale.denominationUsuelle1UniteLegale
+      .orElse(uniteLegale.denominationUsuelle2UniteLegale)
+      .orElse(uniteLegale.denominationUsuelle3UniteLegale)
+      .filter(_ != denomination)
 
   private[orchestrators] def computeDenomination(etablissement: InseeEtablissement): String =
     etablissement.lastPeriodeEtablissement
@@ -174,16 +181,10 @@ class EtablissementImportService(
          |${uniteLegale.nomUsageUniteLegale.getOrElse(uniteLegale.nomUniteLegale.getOrElse(""))}""".stripMargin
 
     uniteLegale.denominationUniteLegale
-      .getOrElse(
-        uniteLegale.denominationUsuelle1UniteLegale
-          .getOrElse(
-            uniteLegale.denominationUsuelle2UniteLegale
-              .getOrElse(
-                uniteLegale.denominationUsuelle3UniteLegale
-                  .getOrElse(fallbackName)
-              )
-          )
-      )
+      .orElse(uniteLegale.denominationUsuelle1UniteLegale)
+      .orElse(uniteLegale.denominationUsuelle2UniteLegale)
+      .orElse(uniteLegale.denominationUsuelle3UniteLegale)
+      .getOrElse(fallbackName)
   }
 
 }

@@ -5,8 +5,6 @@ import models.api.Address
 import models.api.EtablissementSearchResult
 import models.insee.etablissement.DisclosedStatus
 import orchestrators.toOffsetDateTime
-import play.api.libs.json.Json
-import play.api.libs.json.OFormat
 
 import java.util.UUID
 
@@ -32,7 +30,8 @@ case class EtablissementData(
     enseigne1Etablissement: Option[String],
     activitePrincipaleEtablissement: Option[String],
     etatAdministratifEtablissement: Option[String],
-    statutDiffusionEtablissement: DisclosedStatus
+    statutDiffusionEtablissement: DisclosedStatus,
+    nomCommercialEtablissement: Option[String]
 ) {
 
   def isOpen = this.etatAdministratifEtablissement.getOrElse(Open) == Open
@@ -68,6 +67,7 @@ case class EtablissementData(
     EtablissementSearchResult(
       siret = siret,
       name = denominationUsuelleEtablissement,
+      commercialName = nomCommercialEtablissement,
       brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
       isHeadOffice = etablissementSiege.exists(_.toBoolean),
       address = if (filterAdress) toFilteredAddress() else toAddress(),
@@ -86,7 +86,6 @@ case class EtablissementData(
 }
 
 object EtablissementData {
-  implicit val format: OFormat[EtablissementData] = Json.format[EtablissementData]
   type EtablissementWithActivity = (EtablissementData, Option[ActivityCode])
   val Closed = "F"
   val Open = "A"
