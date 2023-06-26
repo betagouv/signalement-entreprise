@@ -27,7 +27,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
 
   import dbConfig._
 
-  private val least = SimpleFunction.binary[Option[Double], Option[Double], Option[Double]]("least")
+  private val least = SimpleFunction.ternary[Option[Double], Option[Double], Option[Double], Option[Double]]("least")
 
   private[this] def filterClosedEtablissements(row: EtablissementTable): Rep[Boolean] =
     row.etatAdministratifEtablissement.getOrElse(Open) =!= Closed
@@ -63,10 +63,17 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         .filter(result =>
           least(
             result.denominationUsuelleEtablissement <-> q,
+            result.nomCommercialEtablissement <-> q,
             result.enseigne1Etablissement <-> q
           ).map(dist => dist < 0.68).getOrElse(false)
         )
-        .sortBy(result => least(result.denominationUsuelleEtablissement <-> q, result.enseigne1Etablissement <-> q))
+        .sortBy(result =>
+          least(
+            result.denominationUsuelleEtablissement <-> q,
+            result.nomCommercialEtablissement <-> q,
+            result.enseigne1Etablissement <-> q
+          )
+        )
         .take(10)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)

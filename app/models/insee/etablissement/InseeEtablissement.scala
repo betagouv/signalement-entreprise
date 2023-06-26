@@ -24,12 +24,9 @@ case class InseeEtablissement(
 ) {
 
   def lastPeriodeEtablissement: Option[PeriodeEtablissement] =
-    this.periodesEtablissement.filter(_.dateFin.isEmpty) match {
-      case Nil         => None
-      case ::(head, _) => Some(head)
-    }
+    this.periodesEtablissement.find(_.dateFin.isEmpty)
 
-  def toMap(denomination: String): Map[String, Option[String]] = {
+  def toMap(denomination: String, nomCommercial: Option[String]): Map[String, Option[String]] = {
 
     val lastPeriodeEtablissement: Option[PeriodeEtablissement] = this.lastPeriodeEtablissement
 
@@ -79,6 +76,7 @@ case class InseeEtablissement(
       "enseigne2etablissement" -> lastPeriodeEtablissement.flatMap(_.enseigne2Etablissement),
       "enseigne3etablissement" -> lastPeriodeEtablissement.flatMap(_.enseigne3Etablissement),
       "denominationusuelleetablissement" -> Some(denomination),
+      "nomcommercialetablissement" -> nomCommercial,
       "activiteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(_.activitePrincipaleEtablissement),
       "nomenclatureactiviteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(
         _.nomenclatureActivitePrincipaleEtablissement
