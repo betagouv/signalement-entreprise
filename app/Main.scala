@@ -90,6 +90,7 @@ class SignalConsoComponents(
 
   val companyController = new EtablissementController(
     companyOrchestrator,
+    etablissementService,
     controllerComponents,
     applicationConfiguration.app.apiAuthenticationToken
   )

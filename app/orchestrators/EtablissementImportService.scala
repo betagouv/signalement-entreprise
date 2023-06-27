@@ -4,6 +4,7 @@ import cats.implicits.toTraverseOps
 import config.SignalConsoConfiguration
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
+import models.ImportRequest
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissement
@@ -29,6 +30,33 @@ class EtablissementImportService(
 ) {
 
   private[this] val logger = Logger(this.getClass)
+
+  // One shot, API
+  def importEtablissements(importRequest: ImportRequest): Future[Unit] =
+    for {
+      running <- entrepriseImportRepository.findRunning()
+      _ <-
+        if (running.nonEmpty) Future.failed(EtablissementJobAleadyRunningError(s"${running.size} jobs already running"))
+        else Future.unit
+      token <- inseeClient.generateToken()
+      disclosedStatus =
+        if (signalConsoConfiguration.publicDataOnly) {
+          logger.warn(
+            " !!!!!  Fetching disclosed public data only , check PUBLIC_DATA_ONLY env var for more information!!!!!"
+          )
+          Some(DisclosedStatus.Public)
+        } else None
+      query = InseeEtablissementQuery(
+        token = token,
+        beginPeriod = importRequest.begin,
+        endPeriod = importRequest.end,
+        siret = importRequest.siret,
+        disclosedStatus = disclosedStatus
+      )
+      firstCall <- inseeClient.getEtablissement(query)
+      _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
+      _ <- iterate(query)
+    } yield ()
 
   def importEtablissement(): Future[Unit] =
     entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
@@ -106,6 +134,24 @@ class EtablissementImportService(
       _ = logger.info(s"-------------  Running etablissement job with $query   ----------------")
     } yield query
 
+  private def iterate(
+      query: InseeEtablissementQuery,
+      header: Option[Header] = None
+  ): Future[InseeEtablissementResponse] =
+    for {
+      etablissementResponse <- process(query, header)
+      nextIteration <-
+        if (etablissementResponse.header.nombre == InseeClient.EtablissementPageSize) {
+          iterate(
+            query,
+            Some(etablissementResponse.header)
+          )
+        } else {
+          Future.successful(etablissementResponse)
+        }
+
+    } yield nextIteration
+
   private def iterateThroughEtablissement(
       query: InseeEtablissementQuery,
       executionId: UUID,
@@ -134,11 +180,9 @@ class EtablissementImportService(
 
     } yield nextIteration
 
-  private def processEtablissement(
+  private def process(
       query: InseeEtablissementQuery,
-      executionId: UUID,
-      header: Option[Header],
-      lineCount: Option[Int]
+      header: Option[Header]
   ) =
     for {
       etablissementResponse <- inseeClient
@@ -147,6 +191,16 @@ class EtablissementImportService(
           cursor = header.flatMap(_.curseurSuivant)
         )
       _ <- insertOrUpdateEtablissements(etablissementResponse)
+    } yield etablissementResponse
+
+  private def processEtablissement(
+      query: InseeEtablissementQuery,
+      executionId: UUID,
+      header: Option[Header],
+      lineCount: Option[Int]
+  ) =
+    for {
+      etablissementResponse <- process(query, header)
       lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(e =>
         toOffsetDateTime(e.dateDernierTraitementEtablissement)
       )

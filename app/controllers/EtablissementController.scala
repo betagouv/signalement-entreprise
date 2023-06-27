@@ -7,7 +7,9 @@ import controllers.Token.HashedToken
 import controllers.Token.validateToken
 import controllers.error.AppErrorTransformer.handleError
 import models.SIRET
+import models.ImportRequest
 import models.api.EtablissementSearchResult
+import orchestrators.EtablissementImportService
 import orchestrators.EtablissementService
 import play.api.Logger
 import play.api.libs.json._
@@ -20,6 +22,7 @@ import scala.util.Try
 
 class EtablissementController(
     val etablissementOrchestrator: EtablissementService,
+    importService: EtablissementImportService,
     controllerComponents: ControllerComponents,
     token: HashedToken
 )(implicit val ec: ExecutionContext)
@@ -61,6 +64,16 @@ class EtablissementController(
       _ = logger.debug(s"get info by siret")
       res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated)
     } yield Ok(Json.toJson(res))
+    res.recover { case err => handleError(request, err) }
+  }
+
+  def importEtablissements() = Action.async(parse.json) { request =>
+    val res = for {
+      _ <- validateToken(request, token)
+      importRequest <- request.parseBody[ImportRequest]()
+      _ = logger.debug(s"Import etablissements $importRequest")
+      _ <- importService.importEtablissements(importRequest)
+    } yield NoContent
     res.recover { case err => handleError(request, err) }
   }
 
