@@ -24,6 +24,7 @@ import sttp.client3.basicRequest
 import sttp.model.StatusCode
 import sttp.model.Uri
 import cats.syntax.either._
+import models.SIRET
 import sttp.model.Uri.QuerySegment
 import sttp.model.Uri.QuerySegment.KeyValue
 
@@ -82,11 +83,11 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
   ): Future[InseeEtablissementResponse] = {
 
     val req: RequestT[Identity, Either[String, String], Any] = basicRequest
-      .get(buildUri(query.beginPeriod, cursor, query.endPeriod, query.disclosedStatus))
+      .get(buildUri(query.beginPeriod, cursor, query.endPeriod, query.siret, query.disclosedStatus))
       .auth
       .bearer(query.token.accessToken.value)
 
-    logger.debug(req.toCurl(Set.empty[String]))
+    logger.debug(req.toCurl(Set("Authorization")))
 
     val response: Future[Response[Either[ResponseException[String, JsError], InseeEtablissementResponse]]] =
       sendRequest(req)
@@ -100,6 +101,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
       beginPeriod: Option[OffsetDateTime],
       cursor: Option[String],
       endPeriod: Option[OffsetDateTime],
+      siret: Option[SIRET],
       disclosedStatus: Option[DisclosedStatus]
   ): Uri = {
 
@@ -112,7 +114,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
       "q",
       s"""dateDernierTraitementEtablissement:[$beginPeriodAtStartOfDay TO $endPeriodAtStartOfDay]${disclosedStatus
           .map(s => s" AND statutDiffusionEtablissement:${s.entryName}")
-          .getOrElse("")}"""
+          .getOrElse("")}${siret.map(s => s" AND siret:$s").getOrElse("")}"""
     )
 
     uri"https://api.insee.fr/entreprises/sirene/V3/siret"
