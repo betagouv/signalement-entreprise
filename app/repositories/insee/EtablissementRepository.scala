@@ -1,20 +1,21 @@
 package repositories.insee
 
-import EtablissementRepository.toOptionalSqlValue
-import EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
+import config.SignalConsoConfiguration
+import models.EtablissementData.Closed
+import models.EtablissementData.Open
 import models.ActivityCode
 import models.EtablissementData
 import models.SIREN
 import models.SIRET
 import models.insee.etablissement.DisclosedStatus
+import models.insee.etablissement.DisclosedStatus.Public
 import repositories.PostgresProfile.api._
+import repositories.insee.EtablissementRepository.toOptionalSqlValue
+import repositories.insee.EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
+import slick.lifted.Rep
 import slick.lifted.TableQuery
-import DisclosedStatus.Public
-import config.SignalConsoConfiguration
-import models.EtablissementData.Closed
-import models.EtablissementData.Open
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -105,11 +106,17 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
+        // We want to display the exact match first
+        .sortBy(_.siret === siret)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
         .result
-    )
+    ).map { result =>
+      // If the siret is wrong but the siren exists, the query might return just a head office.
+      // We should not return anything
+      if (result.exists(_._1.siret == siret)) result else Nil
+    }
 
   override def searchBySiren(
       siren: SIREN,
