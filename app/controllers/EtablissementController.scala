@@ -6,8 +6,9 @@ import controllers.Logs.RichLogger
 import controllers.Token.HashedToken
 import controllers.Token.validateToken
 import controllers.error.AppErrorTransformer.handleError
-import models.SIRET
 import models.ImportRequest
+import models.SIREN
+import models.SIRET
 import models.api.EtablissementSearchResult
 import orchestrators.EtablissementImportService
 import orchestrators.EtablissementService
@@ -63,6 +64,16 @@ class EtablissementController(
       sirets <- request.parseBody[List[SIRET]]()
       _ = logger.debug(s"get info by siret")
       res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated)
+    } yield Ok(Json.toJson(res))
+    res.recover { case err => handleError(request, err) }
+  }
+
+  def getBySiren() = Action.async(parse.json) { request =>
+    val res = for {
+      _ <- validateToken(request, token)
+      sirens <- request.parseBody[List[SIREN]]()
+      _ = logger.debug(s"get info by siren")
+      res <- etablissementOrchestrator.getBySiren(sirens)
     } yield Ok(Json.toJson(res))
     res.recover { case err => handleError(request, err) }
   }
