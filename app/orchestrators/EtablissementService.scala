@@ -52,6 +52,12 @@ class EtablissementService(
     case _                   => None
   }
 
+  def getBySiren(sirens: List[SIREN]): Future[List[EtablissementSearchResult]] =
+    Future
+      .sequence(sirens.map(searchEtablissementBySiren(_, openCompaniesOnly = false)))
+      .map(_.flatten)
+      .map(_.map { case (company, activity) => company.toSearchResult(activity.map(_.label)) })
+
   def searchEtablissementBySiren(
       siren: SIREN,
       openCompaniesOnly: Boolean

@@ -5,4 +5,5 @@
 GET         /api/companies/search/:identity        controllers.EtablissementController.searchEtablissementByIdentity(identity: String, openOnly :Option[Boolean])
 GET         /api/companies/search                  controllers.EtablissementController.searchEtablissement(q: String, postalCode: String)
 POST        /api/companies/search                  controllers.EtablissementController.getBySiret()
+POST        /api/companies/siren/search            controllers.EtablissementController.getBySiren()
 POST        /api/companies/import                  controllers.EtablissementController.importEtablissements()
