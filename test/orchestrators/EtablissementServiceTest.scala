@@ -8,6 +8,7 @@ import models.insee.etablissement.DisclosedStatus
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
@@ -45,7 +46,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       import env._
 
       val res = Await.result(
-        service.getBySiret(List.empty, Some(now)),
+        service.getBySiret(List.empty, Some(now), None),
         Duration.Inf
       )
 
@@ -62,7 +63,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       import env._
 
       val res = Await.result(
-        service.getBySiret(List.empty, None),
+        service.getBySiret(List.empty, None, None),
         Duration.Inf
       )
 
@@ -86,7 +87,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
       import env._
       val res = Await.result(
-        service.searchEtablissementByIdentity(identity, openOnly = None),
+        service.searchEtablissementByIdentity(identity, openOnly = None, None),
         Duration.Inf
       )
       res.map(_.siret) shouldEqual List(SIRET.fromUnsafe(identity))
@@ -107,7 +108,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
       import env._
       val res = Await.result(
-        service.searchEtablissementByIdentity(siren.value, openOnly = None),
+        service.searchEtablissementByIdentity(siren.value, openOnly = None, None),
         Duration.Inf
       )
       res.map(_.siret) shouldEqual List(siret)
@@ -133,7 +134,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
       import env._
       val res = Await.result(
-        service.searchEtablissementByIdentity(siren.value, openOnly = Some(true)),
+        service.searchEtablissementByIdentity(siren.value, openOnly = Some(true), None),
         Duration.Inf
       )
       res.map(_.siret) shouldEqual List.empty
@@ -159,10 +160,43 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
       import env._
       val res = Await.result(
-        service.searchEtablissementByIdentity(siren.value, openOnly = Some(true)),
+        service.searchEtablissementByIdentity(siren.value, openOnly = Some(true), None),
         Duration.Inf
       )
       res.map(_.siret) shouldEqual List(siret)
+    }
+
+    "extract default french activity code" in {
+      val activityCode = ActivityCode("code", "french", "english")
+
+      val env = genEnv()
+      import env._
+
+      val result = service.extractActivityLabel(activityCode, None)
+
+      result shouldEqual "french"
+    }
+
+    "fallback on french activity code" in {
+      val activityCode = ActivityCode("code", "french", "english")
+
+      val env = genEnv()
+      import env._
+
+      val result = service.extractActivityLabel(activityCode, Some(Locale.CHINESE))
+
+      result shouldEqual "french"
+    }
+
+    "extract english activity code" in {
+      val activityCode = ActivityCode("code", "french", "english")
+
+      val env = genEnv()
+      import env._
+
+      val result = service.extractActivityLabel(activityCode, Some(Locale.forLanguageTag("en")))
+
+      result shouldEqual "english"
     }
 
   }
