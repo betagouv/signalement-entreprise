@@ -36,6 +36,4 @@ Test / javaOptions += "-Dconfig.resource=test.application.conf"
 javaOptions += "-Dakka.http.parsing.max-uri-length=16k"
 javaOptions += s"-Dtextlogs=${sys.env.getOrElse("USE_TEXT_LOGS", "false")}"
 
-routesImport ++= Seq(
-  "controllers.LocaleQueryStringBindable"
-)
+routesImport ++= Seq("controllers.LocaleQueryStringBindable")
