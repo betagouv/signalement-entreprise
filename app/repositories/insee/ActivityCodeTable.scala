@@ -7,8 +7,9 @@ class ActivityCodeTable(tag: Tag) extends Table[ActivityCode](tag, "activites") 
   def code = column[String]("code")
 
   def libelle = column[String]("libelle")
+  def libelle_en = column[String]("libelle_en")
 
-  def * = (code, libelle) <> ((ActivityCode.apply _).tupled, ActivityCode.unapply)
+  def * = (code, libelle, libelle_en) <> ((ActivityCode.apply _).tupled, ActivityCode.unapply)
 }
 
 object ActivityCodeTable {
