@@ -21,7 +21,7 @@ class EtablissementService(
 
   val logger: Logger = Logger(this.getClass)
 
-  private def extractActivityLabel(activityCode: ActivityCode, lang: Option[Locale]): String =
+  private[orchestrators] def extractActivityLabel(activityCode: ActivityCode, lang: Option[Locale]): String =
     lang match {
       case Some(Locale.ENGLISH) => activityCode.enLabel
       case _                    => activityCode.label
