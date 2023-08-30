@@ -11,6 +11,7 @@ import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 
 import java.time.OffsetDateTime
+import java.util.Locale
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -20,16 +21,27 @@ class EtablissementService(
 
   val logger: Logger = Logger(this.getClass)
 
-  def searchEtablissement(q: String, postalCode: String): Future[List[EtablissementSearchResult]] = {
+  private[orchestrators] def extractActivityLabel(activityCode: ActivityCode, lang: Option[Locale]): String =
+    lang match {
+      case Some(Locale.ENGLISH) => activityCode.enLabel
+      case _                    => activityCode.label
+    }
+
+  def searchEtablissement(
+      q: String,
+      postalCode: String,
+      lang: Option[Locale]
+  ): Future[List[EtablissementSearchResult]] = {
     logger.info(s"searchEtablissement $postalCode $q")
     etablissementRepository
       .search(q, postalCode)
-      .map(results => results.map(result => result._1.toSearchResult(result._2.map(_.label))))
+      .map(results => results.map(result => result._1.toSearchResult(result._2.map(extractActivityLabel(_, lang)))))
   }
 
   def searchEtablissementByIdentity(
       identity: String,
-      openOnly: Option[Boolean]
+      openOnly: Option[Boolean],
+      lang: Option[Locale]
   ): Future[List[EtablissementSearchResult]] = {
     val openCompaniesOnly = openOnly.getOrElse(true)
     logger.debug(s"searchEtablissementByIdentity $identity")
@@ -41,7 +53,7 @@ class EtablissementService(
         case None              => Future.successful(List.empty)
       }
       searchResult = etablissementsWithActivity.map { case (company, activity) =>
-        company.toSearchResult(activity.map(_.label))
+        company.toSearchResult(activity.map(extractActivityLabel(_, lang)))
       }
     } yield searchResult
   }
@@ -52,11 +64,11 @@ class EtablissementService(
     case _                   => None
   }
 
-  def getBySiren(sirens: List[SIREN]): Future[List[EtablissementSearchResult]] =
+  def getBySiren(sirens: List[SIREN], lang: Option[Locale]): Future[List[EtablissementSearchResult]] =
     Future
       .sequence(sirens.map(searchEtablissementBySiren(_, openCompaniesOnly = false)))
       .map(_.flatten)
-      .map(_.map { case (company, activity) => company.toSearchResult(activity.map(_.label)) })
+      .map(_.map { case (company, activity) => company.toSearchResult(activity.map(extractActivityLabel(_, lang))) })
 
   def searchEtablissementBySiren(
       siren: SIREN,
@@ -71,13 +83,17 @@ class EtablissementService(
 
     } yield etablissements
 
-  def getBySiret(sirets: List[SIRET], lastUpdated: Option[OffsetDateTime]): Future[List[EtablissementSearchResult]] =
+  def getBySiret(
+      sirets: List[SIRET],
+      lastUpdated: Option[OffsetDateTime],
+      lang: Option[Locale]
+  ): Future[List[EtablissementSearchResult]] =
     for {
       etablissementList <- etablissementRepository
         .searchBySirets(sirets)
       filteredList = filterUpdatedOnlyEtablissement(etablissementList, lastUpdated)
       etablissementSearchResultList = filteredList.map { case (etablissementData, maybeActivity) =>
-        etablissementData.toSearchResult(maybeActivity.map(_.label), filterAdress = false)
+        etablissementData.toSearchResult(maybeActivity.map(extractActivityLabel(_, lang)), filterAdress = false)
       }
     } yield etablissementSearchResultList
 

@@ -18,6 +18,7 @@ import play.api.mvc.AbstractController
 import play.api.mvc.ControllerComponents
 
 import java.time.OffsetDateTime
+import java.util.Locale
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -31,9 +32,9 @@ class EtablissementController(
 
   val logger: Logger = Logger(this.getClass)
 
-  def searchEtablissement(q: String, postalCode: String) = Action.async { request =>
+  def searchEtablissement(q: String, postalCode: String, lang: Option[Locale]) = Action.async { request =>
     val app = for {
-      results <- etablissementOrchestrator.searchEtablissement(q, postalCode)
+      results <- etablissementOrchestrator.searchEtablissement(q, postalCode, lang)
       _ = logWhenNoResult("search_company_postalcode_no_result")(results, Map("postalcode" -> postalCode, "name" -> q))
     } yield Ok(Json.toJson(results))
 
@@ -41,20 +42,21 @@ class EtablissementController(
 
   }
 
-  def searchEtablissementByIdentity(identity: String, openOnly: Option[Boolean]) = Action.async { request =>
-    val app = for {
-      results <- etablissementOrchestrator
-        .searchEtablissementByIdentity(identity, openOnly)
-      _ = logWhenNoResult("search_company_identity_no_result")(
-        results,
-        Map("identity" -> identity, "openOnly" -> openOnly.show)
-      )
-    } yield Ok(Json.toJson(results))
+  def searchEtablissementByIdentity(identity: String, openOnly: Option[Boolean], lang: Option[Locale]) = Action.async {
+    request =>
+      val app = for {
+        results <- etablissementOrchestrator
+          .searchEtablissementByIdentity(identity, openOnly, lang)
+        _ = logWhenNoResult("search_company_identity_no_result")(
+          results,
+          Map("identity" -> identity, "openOnly" -> openOnly.show)
+        )
+      } yield Ok(Json.toJson(results))
 
-    app.recover { case err => handleError(request, err) }
+      app.recover { case err => handleError(request, err) }
   }
 
-  def getBySiret() = Action.async(parse.json) { request =>
+  def getBySiret(lang: Option[Locale]) = Action.async(parse.json) { request =>
     val res = for {
       _ <- validateToken(request, token)
       lastUpdated = request.queryString
@@ -63,17 +65,17 @@ class EtablissementController(
         .flatMap(c => Try(OffsetDateTime.parse(c)).toOption)
       sirets <- request.parseBody[List[SIRET]]()
       _ = logger.debug(s"get info by siret")
-      res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated)
+      res <- etablissementOrchestrator.getBySiret(sirets, lastUpdated, lang)
     } yield Ok(Json.toJson(res))
     res.recover { case err => handleError(request, err) }
   }
 
-  def getBySiren() = Action.async(parse.json) { request =>
+  def getBySiren(lang: Option[Locale]) = Action.async(parse.json) { request =>
     val res = for {
       _ <- validateToken(request, token)
       sirens <- request.parseBody[List[SIREN]]()
       _ = logger.debug(s"get info by siren")
-      res <- etablissementOrchestrator.getBySiren(sirens)
+      res <- etablissementOrchestrator.getBySiren(sirens, lang)
     } yield Ok(Json.toJson(res))
     res.recover { case err => handleError(request, err) }
   }
