@@ -28,6 +28,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
   def codePostalEtablissement = column[Option[String]]("codepostaletablissement")
   def libelleCommuneEtablissement = column[Option[String]]("libellecommuneetablissement")
   def libelleCommuneEtrangerEtablissement = column[Option[String]]("libellecommuneetrangeretablissement")
+  def codePaysEtrangerEtablissement = column[Option[String]]("codepaysetrangeretablissement")
   def distributionSpecialeEtablissement = column[Option[String]]("distributionspecialeetablissement")
   def codeCommuneEtablissement = column[Option[String]]("codecommuneetablissement")
   def codeCedexEtablissement = column[Option[String]]("codecedexetablissement")
@@ -43,6 +44,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
     UUID ::
       SIRET ::
       SIREN ::
+      Option[String] ::
       Option[String] ::
       Option[String] ::
       Option[String] ::
@@ -79,6 +81,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         codePostalEtablissement ::
         libelleCommuneEtablissement ::
         libelleCommuneEtrangerEtablissement ::
+        codePaysEtrangerEtablissement ::
         distributionSpecialeEtablissement ::
         codeCommuneEtablissement ::
         codeCedexEtablissement ::
@@ -104,6 +107,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         codePostalEtablissement = codePostalEtablissement,
         libelleCommuneEtablissement = libelleCommuneEtablissement,
         libelleCommuneEtrangerEtablissement = libelleCommuneEtrangerEtablissement,
+        codePaysEtrangerEtablissement = codePaysEtrangerEtablissement,
         distributionSpecialeEtablissement = distributionSpecialeEtablissement,
         codeCommuneEtablissement = codeCommuneEtablissement,
         codeCedexEtablissement = codeCedexEtablissement,
@@ -132,6 +136,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         etablissement.codePostalEtablissement ::
         etablissement.libelleCommuneEtablissement ::
         etablissement.libelleCommuneEtrangerEtablissement ::
+        etablissement.codePaysEtrangerEtablissement ::
         etablissement.distributionSpecialeEtablissement ::
         etablissement.codeCommuneEtablissement ::
         etablissement.codeCedexEtablissement ::
@@ -159,6 +164,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
       codePostalEtablissement ::
       libelleCommuneEtablissement ::
       libelleCommuneEtrangerEtablissement ::
+      codePaysEtrangerEtablissement ::
       distributionSpecialeEtablissement ::
       codeCommuneEtablissement ::
       codeCedexEtablissement ::

@@ -1,7 +1,7 @@
 package models.api
 
+import models.insee.ForeignCountry
 import play.api.libs.json.Json
-import play.api.libs.json.OFormat
 
 case class Address(
     number: Option[String] = None,
@@ -9,7 +9,7 @@ case class Address(
     addressSupplement: Option[String] = None,
     postalCode: Option[String] = None,
     city: Option[String] = None,
-    country: Option[Country] = None
+    country: Option[ForeignCountry] = None
 ) {
 
   def isDefined: Boolean = List(
@@ -38,5 +38,5 @@ case class Address(
 }
 
 object Address {
-  implicit val addressFormat: OFormat[Address] = Json.format[Address]
+  implicit val writes = Json.writes[Address]
 }

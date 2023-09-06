@@ -3,6 +3,7 @@ package models
 import models.EtablissementData.Open
 import models.api.Address
 import models.api.EtablissementSearchResult
+import models.insee.ForeignCountry
 import models.insee.etablissement.DisclosedStatus
 import orchestrators.toOffsetDateTime
 
@@ -22,6 +23,7 @@ case class EtablissementData(
     codePostalEtablissement: Option[String],
     libelleCommuneEtablissement: Option[String],
     libelleCommuneEtrangerEtablissement: Option[String],
+    codePaysEtrangerEtablissement: Option[String],
     distributionSpecialeEtablissement: Option[String],
     codeCommuneEtablissement: Option[String],
     codeCedexEtablissement: Option[String],
@@ -48,7 +50,10 @@ case class EtablissementData(
       .map(_.mkString(" ")),
     postalCode = codePostalEtablissement,
     city = libelleCommuneEtablissement,
-    addressSupplement = complementAdresseEtablissement
+    addressSupplement = complementAdresseEtablissement,
+    country = codePaysEtrangerEtablissement
+      .flatMap(_.toIntOption)
+      .flatMap(code => ForeignCountry.foreignCountries.find(_.inseeCode == code))
   )
 
   def toFilteredAddress(): Address = {
