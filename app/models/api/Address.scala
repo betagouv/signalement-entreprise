@@ -31,7 +31,7 @@ case class Address(
     fullStreet,
     addressSupplement.getOrElse(""),
     fullCity,
-    country.map(_.isoCode).getOrElse("")
+    country.map(_.name).getOrElse("")
   ).filter(_ != "")
 
   override def toString: String = toArray.mkString(" - ")
