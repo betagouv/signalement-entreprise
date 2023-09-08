@@ -53,7 +53,7 @@ case class EtablissementData(
     addressSupplement = complementAdresseEtablissement,
     country = codePaysEtrangerEtablissement
       .flatMap(_.toIntOption)
-      .flatMap(code => ForeignCountry.foreignCountries.find(_.inseeCode == code))
+      .flatMap(inseeCode => ForeignCountry.map.get(inseeCode).map(_.code))
   )
 
   def toFilteredAddress(): Address = {

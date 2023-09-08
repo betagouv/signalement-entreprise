@@ -1,6 +1,6 @@
 package models.api
 
-import models.insee.ForeignCountry
+import models.insee.CountryCode
 import play.api.libs.json.Json
 
 case class Address(
@@ -9,7 +9,7 @@ case class Address(
     addressSupplement: Option[String] = None,
     postalCode: Option[String] = None,
     city: Option[String] = None,
-    country: Option[ForeignCountry] = None
+    country: Option[CountryCode] = None
 ) {
 
   def isDefined: Boolean = List(
@@ -31,7 +31,7 @@ case class Address(
     fullStreet,
     addressSupplement.getOrElse(""),
     fullCity,
-    country.map(_.name).getOrElse("")
+    country.map(_.code).getOrElse("")
   ).filter(_ != "")
 
   override def toString: String = toArray.mkString(" - ")
