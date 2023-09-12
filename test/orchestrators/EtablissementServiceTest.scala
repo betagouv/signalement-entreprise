@@ -242,6 +242,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
         codePostalEtablissement = None,
         libelleCommuneEtablissement = None,
         libelleCommuneEtrangerEtablissement = None,
+        codePaysEtrangerEtablissement = None,
         distributionSpecialeEtablissement = None,
         codeCommuneEtablissement = None,
         codeCedexEtablissement = None,
