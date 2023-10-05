@@ -49,7 +49,7 @@ class EtablissementService(
       etablissementsWithActivity <- extractIdentity(identity) match {
         case Some(Right(siret)) =>
           etablissementRepository.searchBySiretWithHeadOffice(siret, openCompaniesOnly)
-        case Some(Left(siren)) => searchEtablissementBySiren(siren, openCompaniesOnly)
+        case Some(Left(siren)) => searchEtablissementBySiren(siren, openCompaniesOnly, onlyHeadOffice = true)
         case None              => Future.successful(List.empty)
       }
       searchResult = etablissementsWithActivity.map { case (company, activity) =>
@@ -64,24 +64,37 @@ class EtablissementService(
     case _                   => None
   }
 
-  def getBySiren(sirens: List[SIREN], lang: Option[Locale]): Future[List[EtablissementSearchResult]] =
+  def getBySiren(
+      sirens: List[SIREN],
+      lang: Option[Locale],
+      onlyHeadOffice: Option[Boolean]
+  ): Future[List[EtablissementSearchResult]] =
     Future
-      .sequence(sirens.map(searchEtablissementBySiren(_, openCompaniesOnly = false)))
+      .sequence(
+        sirens.map(
+          searchEtablissementBySiren(_, openCompaniesOnly = false, onlyHeadOffice = onlyHeadOffice.getOrElse(true))
+        )
+      )
       .map(_.flatten)
       .map(_.map { case (company, activity) => company.toSearchResult(activity.map(extractActivityLabel(_, lang))) })
 
   def searchEtablissementBySiren(
       siren: SIREN,
-      openCompaniesOnly: Boolean
+      openCompaniesOnly: Boolean,
+      onlyHeadOffice: Boolean
   ): Future[List[(EtablissementData, Option[ActivityCode])]] =
-    for {
-      maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
-      etablissements <- maybeHeadOffice match {
-        case Some(openHeadOffice) if openHeadOffice._1.isOpen => Future.successful(List(openHeadOffice))
-        case _ => etablissementRepository.searchBySiren(siren, openCompaniesOnly)
-      }
+    if (onlyHeadOffice) {
+      for {
+        maybeHeadOffice <- etablissementRepository.searchHeadOfficeBySiren(siren, openCompaniesOnly)
+        etablissements <- maybeHeadOffice match {
+          case Some(openHeadOffice) if openHeadOffice._1.isOpen => Future.successful(List(openHeadOffice))
+          case _ => etablissementRepository.searchBySiren(siren, openCompaniesOnly)
+        }
 
-    } yield etablissements
+      } yield etablissements
+    } else {
+      etablissementRepository.searchBySiren(siren, openCompaniesOnly)
+    }
 
   def getBySiret(
       sirets: List[SIRET],
