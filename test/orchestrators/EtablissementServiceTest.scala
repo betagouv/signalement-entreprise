@@ -199,6 +199,87 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       result shouldEqual "english"
     }
 
+    "getBySiren should return only head office when parameter set to true and head office exists" in {
+      val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
+      val siret = SIRET.fromUnsafe("11111111111112")
+      val siren = SIREN.apply(headOfficeSiret)
+
+      val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
+      val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
+
+      val searchHeadOfficeBySiren = Some(headOffice)
+      val searchBySiren = List(headOffice, etablissement)
+
+      val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren, searchBySirenFunc = searchBySiren)
+
+      import env._
+      val res = Await.result(
+        service.getBySiren(List(siren), lang = None, onlyHeadOffice = Some(true)),
+        Duration.Inf
+      )
+      res.map(_.siret) shouldEqual List(headOfficeSiret)
+    }
+
+    "getBySiren should return only head office when parameter unset and head office exists" in {
+      val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
+      val siret = SIRET.fromUnsafe("11111111111112")
+      val siren = SIREN.apply(headOfficeSiret)
+
+      val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
+      val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
+
+      val searchHeadOfficeBySiren = Some(headOffice)
+      val searchBySiren = List(headOffice, etablissement)
+
+      val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren, searchBySirenFunc = searchBySiren)
+
+      import env._
+      val res = Await.result(
+        service.getBySiren(List(siren), lang = None, onlyHeadOffice = None),
+        Duration.Inf
+      )
+      res.map(_.siret) shouldEqual List(headOfficeSiret)
+    }
+
+    "getBySiren should return all companies when parameter set to true but head office does not exist" in {
+      val siret = SIRET.fromUnsafe("11111111111111")
+      val siren = SIREN.apply(siret)
+
+      val etablissement =
+        genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
+
+      val searchBySiren = List(etablissement)
+
+      val env = genEnv(searchBySirenFunc = searchBySiren)
+
+      import env._
+      val res = Await.result(
+        service.getBySiren(List(siren), lang = None, onlyHeadOffice = Some(true)),
+        Duration.Inf
+      )
+      res.map(_.siret) shouldEqual List(siret)
+    }
+
+    "getBySiren should return all companies when set to false" in {
+      val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
+      val siret = SIRET.fromUnsafe("11111111111112")
+      val siren = SIREN.apply(headOfficeSiret)
+
+      val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
+      val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
+
+      val searchBySiren = List(headOffice, etablissement)
+
+      val env = genEnv(searchBySirenFunc = searchBySiren)
+
+      import env._
+      val res = Await.result(
+        service.getBySiren(List(siren), lang = None, onlyHeadOffice = Some(false)),
+        Duration.Inf
+      )
+      res.map(_.siret) shouldEqual List(headOfficeSiret, siret)
+    }
+
   }
 
   def genEnv(

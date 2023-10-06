@@ -70,12 +70,12 @@ class EtablissementController(
     res.recover { case err => handleError(request, err) }
   }
 
-  def getBySiren(lang: Option[Locale]) = Action.async(parse.json) { request =>
+  def getBySiren(lang: Option[Locale], onlyHeadOffice: Option[Boolean]) = Action.async(parse.json) { request =>
     val res = for {
       _ <- validateToken(request, token)
       sirens <- request.parseBody[List[SIREN]]()
       _ = logger.debug(s"get info by siren")
-      res <- etablissementOrchestrator.getBySiren(sirens, lang)
+      res <- etablissementOrchestrator.getBySiren(sirens, lang, onlyHeadOffice)
     } yield Ok(Json.toJson(res))
     res.recover { case err => handleError(request, err) }
   }
