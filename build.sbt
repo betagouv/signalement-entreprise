@@ -1,6 +1,6 @@
 import org.typelevel.scalacoptions.ScalacOptions
 
-name := "signalement-entreprise"
+name         := "signalement-entreprise"
 organization := "fr.gouv.beta"
 
 version := "1.3.13"
