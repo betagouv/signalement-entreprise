@@ -38,7 +38,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     val companyKeyValues: Map[String, String] =
       companies.view.mapValues(maybeValue => toOptionalSqlValue(maybeValue)).toMap
     val insertColumns: String = companyKeyValues.keys.mkString(",")
-    val insertValues: String = companyKeyValues.values.mkString(",")
+    val insertValues: String  = companyKeyValues.values.mkString(",")
     val insertValuesOnSiretConflict: String = companyKeyValues.view
       .filterKeys(_ != DENOMINATION_USUELLE_ETABLISSEMENT)
       .toMap

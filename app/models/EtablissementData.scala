@@ -93,5 +93,5 @@ case class EtablissementData(
 object EtablissementData {
   type EtablissementWithActivity = (EtablissementData, Option[ActivityCode])
   val Closed = "F"
-  val Open = "A"
+  val Open   = "A"
 }

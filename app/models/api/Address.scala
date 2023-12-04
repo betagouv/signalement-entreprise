@@ -2,6 +2,7 @@ package models.api
 
 import models.insee.CountryCode
 import play.api.libs.json.Json
+import play.api.libs.json.OWrites
 
 case class Address(
     number: Option[String] = None,
@@ -38,5 +39,5 @@ case class Address(
 }
 
 object Address {
-  implicit val writes = Json.writes[Address]
+  implicit val writes: OWrites[Address] = Json.writes[Address]
 }

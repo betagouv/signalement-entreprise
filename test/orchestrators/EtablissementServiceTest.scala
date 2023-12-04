@@ -18,9 +18,9 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
   "EtablissementService" should {
 
-    val now = OffsetDateTime.now()
+    val now        = OffsetDateTime.now()
     val futureDate = Some(now.plusDays(10).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-    val pastDate = Some(now.minusDays(10).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+    val pastDate   = Some(now.minusDays(10).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
     val siretNonDisclosedNewlyUpdated = genEtablissement(
       SIRET.fromUnsafe("11111111111111"),
@@ -201,14 +201,14 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
     "getBySiren should return only head office when parameter set to true and head office exists" in {
       val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
-      val siret = SIRET.fromUnsafe("11111111111112")
-      val siren = SIREN.apply(headOfficeSiret)
+      val siret           = SIRET.fromUnsafe("11111111111112")
+      val siren           = SIREN.apply(headOfficeSiret)
 
       val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
       val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
 
       val searchHeadOfficeBySiren = Some(headOffice)
-      val searchBySiren = List(headOffice, etablissement)
+      val searchBySiren           = List(headOffice, etablissement)
 
       val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren, searchBySirenFunc = searchBySiren)
 
@@ -222,14 +222,14 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
     "getBySiren should return only head office when parameter unset and head office exists" in {
       val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
-      val siret = SIRET.fromUnsafe("11111111111112")
-      val siren = SIREN.apply(headOfficeSiret)
+      val siret           = SIRET.fromUnsafe("11111111111112")
+      val siren           = SIREN.apply(headOfficeSiret)
 
       val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
       val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
 
       val searchHeadOfficeBySiren = Some(headOffice)
-      val searchBySiren = List(headOffice, etablissement)
+      val searchBySiren           = List(headOffice, etablissement)
 
       val env = genEnv(searchHeadOfficeBySiren = searchHeadOfficeBySiren, searchBySirenFunc = searchBySiren)
 
@@ -262,8 +262,8 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
 
     "getBySiren should return all companies when set to false" in {
       val headOfficeSiret = SIRET.fromUnsafe("11111111111111")
-      val siret = SIRET.fromUnsafe("11111111111112")
-      val siren = SIREN.apply(headOfficeSiret)
+      val siret           = SIRET.fromUnsafe("11111111111112")
+      val siren           = SIREN.apply(headOfficeSiret)
 
       val headOffice = genEtablissement(headOfficeSiret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("true"))
       val etablissement = genEtablissement(siret, DisclosedStatus.Public, pastDate, isHeadOffice = Some("false"))
@@ -289,7 +289,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
       searchHeadOfficeBySiren: Option[(EtablissementData, Option[ActivityCode])] = None
   ) = new {
 
-    implicit val ec = ExecutionContext.global
+    implicit val ec: ExecutionContext = ExecutionContext.global
 
     val repo = new EtablissementRepositoryInterfaceMock(
       searchBySiretsFunc = searchBySiretsFunc,
