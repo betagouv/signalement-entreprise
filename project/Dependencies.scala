@@ -7,18 +7,20 @@ object Dependencies {
 
     lazy val playSlickVersion = "5.1.0"
     lazy val slickPgVersion = "0.21.1"
-    lazy val sentryVersion = "6.10.0"
-    lazy val specs2MatcherExtraVersion = "4.10.5"
+    lazy val sentryVersion = "6.34.0"
+    lazy val specs2MatcherExtraVersion = "4.20.3"
     lazy val scalaCheckVersion = "1.17.0"
-    lazy val catsCoreVersion = "2.9.0"
-    lazy val pureConfigVersion = "0.17.2"
-    lazy val jacksonModuleScalaVersion = "2.14.1"
-    lazy val enumeratumVersion = "1.7.2"
+    lazy val catsCoreVersion = "2.10.0"
+    lazy val pureConfigVersion = "0.17.4"
+    lazy val jacksonModuleScalaVersion = "2.16.0"
+    lazy val enumeratumVersion = "1.7.3"
     lazy val postgresqlVersion = "42.5.1"
-    lazy val refinedVersion = "0.10.1"
-    lazy val chimneyVersion = "0.6.2"
-    lazy val sttp = "3.8.5"
-    lazy val flyWayVersion = "9.10.2"
+    lazy val refinedVersion = "0.11.0"
+    lazy val chimneyVersion = "0.8.3"
+    lazy val sttp = "3.9.1"
+    lazy val flyWayVersion = "10.0.1"
+    lazy val janino                    = "3.1.11"
+    lazy val logstashLogbackEncoder = "7.3"
 
   }
 
@@ -30,10 +32,11 @@ object Dependencies {
   }
 
   object Compile {
-    val flyWayVersion = "org.flywaydb" % "flyway-core" % Versions.flyWayVersion
-    val janino = "org.codehaus.janino" % "janino" % "3.1.9" // Needed for the <if> in logback conf
-    val commonsCompiler = "org.codehaus.janino" % "commons-compiler" % "3.1.9" // Needed for janino
-    val logstashLogBackEncoder = "net.logstash.logback" % "logstash-logback-encoder" % "7.3"
+    val flywayCore = "org.flywaydb" % "flyway-core" % Versions.flyWayVersion
+    val flywayPostgres = "org.flywaydb" % "flyway-database-postgresql" % Versions.flyWayVersion
+    val janino = "org.codehaus.janino" % "janino" % Versions.janino // Needed for the <if> in logback conf
+    val commonsCompiler = "org.codehaus.janino" % "commons-compiler" % Versions.janino // Needed for janino
+    val logstashLogBackEncoder = "net.logstash.logback" % "logstash-logback-encoder" % Versions.logstashLogbackEncoder
     val sttpPlayJson = "com.softwaremill.sttp.client3" %% "play-json" % Versions.sttp
     val sttp = "com.softwaremill.sttp.client3" %% "core" % Versions.sttp
     val sentry = "io.sentry" % "sentry-logback" % Versions.sentryVersion
@@ -71,7 +74,8 @@ object Dependencies {
     Compile.refinded,
     Compile.chimney,
     Compile.argon2Jvm,
-    Compile.flyWayVersion,
+    Compile.flywayCore,
+    Compile.flywayPostgres,
     Test.specs2Import,
     Test.specs2MatcherExtra,
     Test.scalaCheck

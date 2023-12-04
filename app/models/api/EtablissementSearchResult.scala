@@ -2,6 +2,7 @@ package models.api
 
 import models.SIRET
 import play.api.libs.json.Json
+import play.api.libs.json.OWrites
 
 import java.time.OffsetDateTime
 
@@ -21,5 +22,5 @@ case class EtablissementSearchResult(
 )
 
 object EtablissementSearchResult {
-  implicit val writes = Json.writes[EtablissementSearchResult]
+  implicit val writes: OWrites[EtablissementSearchResult] = Json.writes[EtablissementSearchResult]
 }

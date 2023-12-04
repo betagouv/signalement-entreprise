@@ -18,27 +18,27 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
   val id: Rep[UUID] = column[UUID]("id", O.PrimaryKey)
   def siret = column[SIRET]("siret", O.PrimaryKey) // Primary key MUST be there so insertOrUpdateAll will do his job
   def siren = column[SIREN]("siren")
-  def dateDernierTraitementEtablissement = column[Option[String]]("datederniertraitementetablissement")
-  def etablissementSiege = column[Option[String]]("etablissementsiege")
-  def complementAdresseEtablissement = column[Option[String]]("complementadresseetablissement")
-  def numeroVoieEtablissement = column[Option[String]]("numerovoieetablissement")
-  def indiceRepetitionEtablissement = column[Option[String]]("indicerepetitionetablissement")
-  def typeVoieEtablissement = column[Option[String]]("typevoieetablissement")
-  def libelleVoieEtablissement = column[Option[String]]("libellevoieetablissement")
-  def codePostalEtablissement = column[Option[String]]("codepostaletablissement")
-  def libelleCommuneEtablissement = column[Option[String]]("libellecommuneetablissement")
+  def dateDernierTraitementEtablissement  = column[Option[String]]("datederniertraitementetablissement")
+  def etablissementSiege                  = column[Option[String]]("etablissementsiege")
+  def complementAdresseEtablissement      = column[Option[String]]("complementadresseetablissement")
+  def numeroVoieEtablissement             = column[Option[String]]("numerovoieetablissement")
+  def indiceRepetitionEtablissement       = column[Option[String]]("indicerepetitionetablissement")
+  def typeVoieEtablissement               = column[Option[String]]("typevoieetablissement")
+  def libelleVoieEtablissement            = column[Option[String]]("libellevoieetablissement")
+  def codePostalEtablissement             = column[Option[String]]("codepostaletablissement")
+  def libelleCommuneEtablissement         = column[Option[String]]("libellecommuneetablissement")
   def libelleCommuneEtrangerEtablissement = column[Option[String]]("libellecommuneetrangeretablissement")
-  def codePaysEtrangerEtablissement = column[Option[String]]("codepaysetrangeretablissement")
-  def distributionSpecialeEtablissement = column[Option[String]]("distributionspecialeetablissement")
-  def codeCommuneEtablissement = column[Option[String]]("codecommuneetablissement")
-  def codeCedexEtablissement = column[Option[String]]("codecedexetablissement")
-  def libelleCedexEtablissement = column[Option[String]]("libellecedexetablissement")
-  def denominationUsuelleEtablissement = column[Option[String]](DENOMINATION_USUELLE_ETABLISSEMENT)
-  def enseigne1Etablissement = column[Option[String]]("enseigne1etablissement")
-  def activitePrincipaleEtablissement = column[Option[String]]("activiteprincipaleetablissement")
-  def etatAdministratifEtablissement = column[Option[String]]("etatadministratifetablissement")
-  def statutDiffusionEtablissement = column[DisclosedStatus]("statutdiffusionetablissement")
-  def nomCommercialEtablissement = column[Option[String]](NOM_COMMERCIAL_ETABLISSEMENT)
+  def codePaysEtrangerEtablissement       = column[Option[String]]("codepaysetrangeretablissement")
+  def distributionSpecialeEtablissement   = column[Option[String]]("distributionspecialeetablissement")
+  def codeCommuneEtablissement            = column[Option[String]]("codecommuneetablissement")
+  def codeCedexEtablissement              = column[Option[String]]("codecedexetablissement")
+  def libelleCedexEtablissement           = column[Option[String]]("libellecedexetablissement")
+  def denominationUsuelleEtablissement    = column[Option[String]](DENOMINATION_USUELLE_ETABLISSEMENT)
+  def enseigne1Etablissement              = column[Option[String]]("enseigne1etablissement")
+  def activitePrincipaleEtablissement     = column[Option[String]]("activiteprincipaleetablissement")
+  def etatAdministratifEtablissement      = column[Option[String]]("etatadministratifetablissement")
+  def statutDiffusionEtablissement        = column[DisclosedStatus]("statutdiffusionetablissement")
+  def nomCommercialEtablissement          = column[Option[String]](NOM_COMMERCIAL_ETABLISSEMENT)
 
   type EtablissementHList =
     UUID ::
@@ -181,6 +181,6 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
 
 object EtablissementTable {
   val DENOMINATION_USUELLE_ETABLISSEMENT = "denominationusuelleetablissement"
-  val NOM_COMMERCIAL_ETABLISSEMENT = "nomcommercialetablissement"
-  val table = TableQuery[EtablissementTable]
+  val NOM_COMMERCIAL_ETABLISSEMENT       = "nomcommercialetablissement"
+  val table                              = TableQuery[EtablissementTable]
 }

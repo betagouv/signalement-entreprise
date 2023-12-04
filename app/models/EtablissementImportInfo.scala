@@ -1,6 +1,7 @@
 package models
 
 import play.api.libs.json.Json
+import play.api.libs.json.OWrites
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -18,5 +19,5 @@ final case class EnterpriseImportInfo(
 )
 
 object EnterpriseImportInfo {
-  implicit val enterpriseSyncWrite = Json.writes[EnterpriseImportInfo]
+  implicit val enterpriseSyncWrite: OWrites[EnterpriseImportInfo] = Json.writes[EnterpriseImportInfo]
 }

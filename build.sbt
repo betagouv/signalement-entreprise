@@ -1,9 +1,11 @@
+import org.typelevel.scalacoptions.ScalacOptions
+
 name := "signalement-entreprise"
 organization := "fr.gouv.beta"
 
 version := "1.3.13"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.12"
 
 lazy val `signalement-entreprise` = (project in file(".")).enablePlugins(PlayScala)
 
@@ -17,7 +19,7 @@ scalafmtOnCompile := true
 scalacOptions ++= Seq(
   "-explaintypes",
   "-Ywarn-macros:after",
-  "-target:17",
+  "-release:17",
   "-Wconf:cat=unused-imports&src=views/.*:s",
   "-Wconf:cat=unused:info",
   s"-Wconf:src=${target.value}/.*:s",
@@ -37,3 +39,5 @@ javaOptions += "-Dakka.http.parsing.max-uri-length=16k"
 javaOptions += s"-Dtextlogs=${sys.env.getOrElse("USE_TEXT_LOGS", "false")}"
 
 routesImport ++= Seq("controllers.LocaleQueryStringBindable")
+
+Test / tpolecatExcludeOptions += ScalacOptions.warnNonUnitStatement
