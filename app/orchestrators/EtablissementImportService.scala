@@ -61,8 +61,8 @@ class EtablissementImportService(
   def importEtablissement(): Future[Unit] =
     entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
       (for {
-        _ <- validateIfRunning(batchInfo.id)
-        query <- computeQuery()
+        _         <- validateIfRunning(batchInfo.id)
+        query     <- computeQuery()
         firstCall <- inseeClient.getEtablissement(query)
         _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
         _ <- entrepriseImportRepository.updateLineCount(batchInfo.id, firstCall.header.total.toDouble)
@@ -95,7 +95,7 @@ class EtablissementImportService(
       _ = logger.info(s"Getting back the same jobs")
       after <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
       inter = after.intersect(before)
-      _ = logger.info(s"Found ${inter.size} non closed jobs")
+      _     = logger.info(s"Found ${inter.size} non closed jobs")
       _ <- inter
         .map(x =>
           entrepriseImportRepository
@@ -114,7 +114,7 @@ class EtablissementImportService(
 
   private def computeQuery() =
     for {
-      token <- inseeClient.generateToken()
+      token           <- inseeClient.generateToken()
       lastExecutedJob <- entrepriseImportRepository.findLastEnded()
       beginPeriod = lastExecutedJob.flatMap(_.lastUpdated)
       disclosedStatus =
@@ -211,8 +211,8 @@ class EtablissementImportService(
 
   private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse) =
     etablissementResponse.etablissements.map { etablissement =>
-      val denomination = computeDenomination(etablissement)
-      val nomCommercial = computeNomCommercial(etablissement.uniteLegale, denomination)
+      val denomination                             = computeDenomination(etablissement)
+      val nomCommercial                            = computeNomCommercial(etablissement.uniteLegale, denomination)
       val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, nomCommercial)
       repository.insertOrUpdate(companyData)
     }.sequence

@@ -72,7 +72,7 @@ class EtablissementController(
 
   def getBySiren(lang: Option[Locale], onlyHeadOffice: Option[Boolean]) = Action.async(parse.json) { request =>
     val res = for {
-      _ <- validateToken(request, token)
+      _      <- validateToken(request, token)
       sirens <- request.parseBody[List[SIREN]]()
       _ = logger.debug(s"get info by siren")
       res <- etablissementOrchestrator.getBySiren(sirens, lang, onlyHeadOffice)
@@ -82,7 +82,7 @@ class EtablissementController(
 
   def importEtablissements() = Action.async(parse.json) { request =>
     val res = for {
-      _ <- validateToken(request, token)
+      _             <- validateToken(request, token)
       importRequest <- request.parseBody[ImportRequest]()
       _ = logger.debug(s"Import etablissements $importRequest")
       _ <- importService.importEtablissements(importRequest)

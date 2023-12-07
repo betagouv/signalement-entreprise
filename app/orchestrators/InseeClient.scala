@@ -105,10 +105,10 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
       disclosedStatus: Option[DisclosedStatus]
   ): Uri = {
 
-    val beginPeriodAtStartOfDay: String = beginPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
-    val endPeriodAtStartOfDay: String = endPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
-    val cursorQueryParam: QuerySegment = KeyValue("curseur", cursor.getOrElse(InitialCursor))
-    val sortQueryParam: QuerySegment = KeyValue("tri", LastModifiedField)
+    val beginPeriodAtStartOfDay: String  = beginPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
+    val endPeriodAtStartOfDay: String    = endPeriod.map(_.format(DateFormatter)).getOrElse(WildCardPeriod)
+    val cursorQueryParam: QuerySegment   = KeyValue("curseur", cursor.getOrElse(InitialCursor))
+    val sortQueryParam: QuerySegment     = KeyValue("tri", LastModifiedField)
     val pageSizeQueryParam: QuerySegment = KeyValue("nombre", EtablissementPageSize.toString)
     val searchQueryParam = KeyValue(
       "q",
@@ -166,8 +166,8 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
 object InseeClient {
 
   val EtablissementPageSize = 1000
-  val InitialCursor = "*"
-  val LastModifiedField = "dateDernierTraitementEtablissement"
-  val WildCardPeriod = "*"
+  val InitialCursor         = "*"
+  val LastModifiedField     = "dateDernierTraitementEtablissement"
+  val WildCardPeriod        = "*"
 
 }

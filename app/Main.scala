@@ -80,9 +80,8 @@ class SignalConsoComponents(
     )
 
   actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
-    etablissementService.importEtablissement()
-    ()
-  }
+    etablissementService.importEtablissement(): Unit
+  }: Unit
 
   val companyOrchestrator = new EtablissementService(
     companyDataRepository
