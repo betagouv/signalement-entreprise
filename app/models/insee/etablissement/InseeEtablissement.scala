@@ -76,8 +76,11 @@ case class InseeEtablissement(
       "enseigne2etablissement"             -> lastPeriodeEtablissement.flatMap(_.enseigne2Etablissement),
       "enseigne3etablissement"             -> lastPeriodeEtablissement.flatMap(_.enseigne3Etablissement),
       "denominationusuelleetablissement"   -> Some(denomination),
-      "nomcommercialetablissement"         -> nomCommercial,
-      "activiteprincipaleetablissement"    -> lastPeriodeEtablissement.flatMap(_.activitePrincipaleEtablissement),
+      "anciennedenominationusuelleetablissement" -> lastPeriodeEtablissement.flatMap(
+        _.denominationUsuelleEtablissement
+      ),
+      "nomcommercialetablissement"      -> nomCommercial,
+      "activiteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(_.activitePrincipaleEtablissement),
       "nomenclatureactiviteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(
         _.nomenclatureActivitePrincipaleEtablissement
       ),

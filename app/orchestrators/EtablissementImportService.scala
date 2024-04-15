@@ -7,7 +7,6 @@ import models.EnterpriseImportInfo
 import models.ImportRequest
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Header
-import models.insee.etablissement.InseeEtablissement
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeEtablissementQuery
@@ -211,7 +210,7 @@ class EtablissementImportService(
 
   private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse) =
     etablissementResponse.etablissements.map { etablissement =>
-      val denomination                             = computeDenomination(etablissement)
+      val denomination                             = denominationFromUniteLegale(etablissement.uniteLegale)
       val nomCommercial                            = computeNomCommercial(etablissement.uniteLegale, denomination)
       val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, nomCommercial)
       repository.insertOrUpdate(companyData)
@@ -222,11 +221,6 @@ class EtablissementImportService(
       .orElse(uniteLegale.denominationUsuelle2UniteLegale)
       .orElse(uniteLegale.denominationUsuelle3UniteLegale)
       .filter(_ != denomination)
-
-  private[orchestrators] def computeDenomination(etablissement: InseeEtablissement): String =
-    etablissement.lastPeriodeEtablissement
-      .flatMap(_.denominationUsuelleEtablissement)
-      .getOrElse(denominationFromUniteLegale(etablissement.uniteLegale))
 
   private[orchestrators] def denominationFromUniteLegale(uniteLegale: UniteLegale): String = {
 

@@ -29,6 +29,7 @@ case class EtablissementData(
     codeCedexEtablissement: Option[String],
     libelleCedexEtablissement: Option[String],
     denominationUsuelleEtablissement: Option[String],
+    ancienneDenominationUsuelleEtablissement: Option[String],
     enseigne1Etablissement: Option[String],
     activitePrincipaleEtablissement: Option[String],
     etatAdministratifEtablissement: Option[String],
