@@ -329,6 +329,7 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
         codeCedexEtablissement = None,
         libelleCedexEtablissement = None,
         denominationUsuelleEtablissement = None,
+        ancienneDenominationUsuelleEtablissement = None,
         enseigne1Etablissement = None,
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = isOpen,
