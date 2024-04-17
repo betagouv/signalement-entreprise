@@ -29,6 +29,7 @@ case class EtablissementData(
     codeCedexEtablissement: Option[String],
     libelleCedexEtablissement: Option[String],
     denominationUsuelleEtablissement: Option[String],
+    ancienneDenominationUsuelleEtablissement: Option[String],
     enseigne1Etablissement: Option[String],
     activitePrincipaleEtablissement: Option[String],
     etatAdministratifEtablissement: Option[String],
@@ -72,6 +73,7 @@ case class EtablissementData(
     EtablissementSearchResult(
       siret = siret,
       name = denominationUsuelleEtablissement,
+      oldName = ancienneDenominationUsuelleEtablissement,
       commercialName = nomCommercialEtablissement,
       brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
       isHeadOffice = etablissementSiege.exists(_.toBoolean),

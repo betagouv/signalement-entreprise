@@ -117,7 +117,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
           .getOrElse("")}${siret.map(s => s" AND siret:$s").getOrElse("")}"""
     )
 
-    uri"https://api.insee.fr/entreprises/sirene/V3/siret"
+    uri"https://api.insee.fr/entreprises/sirene/V3.11/siret"
       .addQuerySegment(searchQueryParam)
       .addQuerySegment(cursorQueryParam)
       .addQuerySegment(sortQueryParam)

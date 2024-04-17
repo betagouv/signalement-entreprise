@@ -18,10 +18,10 @@ trait PostgresProfile
   override val api = MyAPI
 
   object MyAPI
-      extends API
+      extends ExtPostgresAPI
       with ArrayImplicits
       with JsonImplicits
-      with DateTimeImplicits
+      with Date2DateTimeImplicitsDuration
       with PgTrgmImplicits
       with SimpleSearchPlainImplicits
 
