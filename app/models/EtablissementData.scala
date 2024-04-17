@@ -73,6 +73,7 @@ case class EtablissementData(
     EtablissementSearchResult(
       siret = siret,
       name = denominationUsuelleEtablissement,
+      oldName = ancienneDenominationUsuelleEtablissement,
       commercialName = nomCommercialEtablissement,
       brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
       isHeadOffice = etablissementSiege.exists(_.toBoolean),
