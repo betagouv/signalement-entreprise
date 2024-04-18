@@ -47,11 +47,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       .mkString(",")
     db.run(sqlu"""INSERT INTO etablissements (#$insertColumns)
           VALUES (#$insertValues)
-          ON CONFLICT(siret) DO UPDATE SET #$insertValuesOnSiretConflict,
-          denominationusuelleetablissement=COALESCE(NULLIF(#${companyKeyValues.getOrElse(
-        DENOMINATION_USUELLE_ETABLISSEMENT,
-        "NULL"
-      )}, ''), etablissements.denominationusuelleetablissement)
+          ON CONFLICT(siret) DO UPDATE SET #$insertValuesOnSiretConflict
         """)
   }
 
@@ -59,28 +55,35 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     db.run(
       table
         .filter(_.codePostalEtablissement === postalCode)
-        .filter(_.denominationUsuelleEtablissement.isDefined)
         .filter(filterClosedEtablissements)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filter(result =>
           least(
-            result.denominationUsuelleEtablissement <-> q,
+            result.denomination <-> q,
+            result.denominationUsuelle1UniteLegale <-> q,
+            result.denominationUsuelle2UniteLegale <-> q,
+            result.denominationUsuelle3UniteLegale <-> q,
             result.nomCommercialEtablissement <-> q,
             result.enseigne1Etablissement <-> q,
-            result.ancienneDenominationUsuelleEtablissement <-> q
+            result.enseigne2Etablissement <-> q,
+            result.enseigne3Etablissement <-> q
           ).map(dist => dist < 0.68).getOrElse(false)
         )
-        .sortBy(result =>
-          least(
-            result.denominationUsuelleEtablissement <-> q,
-            result.nomCommercialEtablissement <-> q,
-            result.enseigne1Etablissement <-> q,
-            result.ancienneDenominationUsuelleEtablissement <-> q
-          )
-        )
-        .take(10)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
+        .sortBy { case (result, _) =>
+          least(
+            result.denomination <-> q,
+            result.denominationUsuelle1UniteLegale <-> q,
+            result.denominationUsuelle2UniteLegale <-> q,
+            result.denominationUsuelle3UniteLegale <-> q,
+            result.nomCommercialEtablissement <-> q,
+            result.enseigne1Etablissement <-> q,
+            result.enseigne2Etablissement <-> q,
+            result.enseigne3Etablissement <-> q
+          )
+        }
+        .take(10)
         .to[List]
         .result
     )
@@ -91,7 +94,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     db.run(
       table
         .filter(_.siret inSetBind sirets)
-        .filter(_.denominationUsuelleEtablissement.isDefined)
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
@@ -106,7 +108,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       table
         .filter(_.siren === SIREN(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
-        .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         // We want to display the exact match first
@@ -128,7 +129,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
     db.run(
       table
         .filter(_.siren === siren)
-        .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
@@ -145,7 +145,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       table
         .filter(_.siren === siren)
         .filter(_.etablissementSiege === "true")
-        .filter(_.denominationUsuelleEtablissement.isDefined)
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
