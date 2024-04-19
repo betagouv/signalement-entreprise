@@ -26,7 +26,7 @@ case class InseeEtablissement(
   def lastPeriodeEtablissement: Option[PeriodeEtablissement] =
     this.periodesEtablissement.find(_.dateFin.isEmpty)
 
-  def toMap(denomination: String, nomCommercial: Option[String]): Map[String, Option[String]] = {
+  def toMap(denomination: String): Map[String, Option[String]] = {
 
     val lastPeriodeEtablissement: Option[PeriodeEtablissement] = this.lastPeriodeEtablissement
 
@@ -71,16 +71,16 @@ case class InseeEtablissement(
       "libellecedex2etablissement"         -> this.adresse2Etablissement.flatMap(_.libelleCedex2Etablissement),
       "codepaysetranger2etablissement"     -> this.adresse2Etablissement.flatMap(_.codePaysEtranger2Etablissement),
       "libellepaysetranger2etablissement"  -> this.adresse2Etablissement.flatMap(_.libellePaysEtranger2Etablissement),
+      "denomination"                       -> Some(denomination),
+      "denominationusuelle1unitelegale"    -> this.uniteLegale.denominationUsuelle1UniteLegale,
+      "denominationusuelle2unitelegale"    -> this.uniteLegale.denominationUsuelle2UniteLegale,
+      "denominationusuelle3unitelegale"    -> this.uniteLegale.denominationUsuelle3UniteLegale,
       "datedebut"                          -> lastPeriodeEtablissement.flatMap(_.dateDebut),
+      "nomcommercialetablissement"         -> lastPeriodeEtablissement.flatMap(_.denominationUsuelleEtablissement),
       "enseigne1etablissement"             -> lastPeriodeEtablissement.flatMap(_.enseigne1Etablissement),
       "enseigne2etablissement"             -> lastPeriodeEtablissement.flatMap(_.enseigne2Etablissement),
       "enseigne3etablissement"             -> lastPeriodeEtablissement.flatMap(_.enseigne3Etablissement),
-      "denominationusuelleetablissement"   -> Some(denomination),
-      "anciennedenominationusuelleetablissement" -> lastPeriodeEtablissement.flatMap(
-        _.denominationUsuelleEtablissement
-      ),
-      "nomcommercialetablissement"      -> nomCommercial,
-      "activiteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(_.activitePrincipaleEtablissement),
+      "activiteprincipaleetablissement"    -> lastPeriodeEtablissement.flatMap(_.activitePrincipaleEtablissement),
       "nomenclatureactiviteprincipaleetablissement" -> lastPeriodeEtablissement.flatMap(
         _.nomenclatureActivitePrincipaleEtablissement
       ),

@@ -182,7 +182,7 @@ class EtablissementImportService(
   private def process(
       query: InseeEtablissementQuery,
       header: Option[Header]
-  ) =
+  ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- inseeClient
         .getEtablissement(
@@ -197,7 +197,7 @@ class EtablissementImportService(
       executionId: UUID,
       header: Option[Header],
       lineCount: Option[Int]
-  ) =
+  ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- process(query, header)
       lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(e =>
@@ -208,31 +208,17 @@ class EtablissementImportService(
       _ = logger.info(s"Processed $linesDone / ${etablissementResponse.header.total} lines so far")
     } yield etablissementResponse
 
-  private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse) =
+  private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse): Future[List[Int]] =
     etablissementResponse.etablissements.map { etablissement =>
       val denomination                             = denominationFromUniteLegale(etablissement.uniteLegale)
-      val nomCommercial                            = computeNomCommercial(etablissement.uniteLegale, denomination)
-      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, nomCommercial)
+      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination)
       repository.insertOrUpdate(companyData)
     }.sequence
 
-  private[orchestrators] def computeNomCommercial(uniteLegale: UniteLegale, denomination: String): Option[String] =
-    uniteLegale.denominationUsuelle1UniteLegale
-      .orElse(uniteLegale.denominationUsuelle2UniteLegale)
-      .orElse(uniteLegale.denominationUsuelle3UniteLegale)
-      .filter(_ != denomination)
-
   private[orchestrators] def denominationFromUniteLegale(uniteLegale: UniteLegale): String = {
-
-    val fallbackName =
-      s"""${uniteLegale.prenomUsuelUniteLegale.getOrElse("")} 
-         |${uniteLegale.nomUsageUniteLegale.getOrElse(uniteLegale.nomUniteLegale.getOrElse(""))}""".stripMargin
-
-    uniteLegale.denominationUniteLegale
-      .orElse(uniteLegale.denominationUsuelle1UniteLegale)
-      .orElse(uniteLegale.denominationUsuelle2UniteLegale)
-      .orElse(uniteLegale.denominationUsuelle3UniteLegale)
-      .getOrElse(fallbackName)
+    val fallbackName = s"${uniteLegale.prenomUsuelUniteLegale.getOrElse("")} ${uniteLegale.nomUsageUniteLegale
+        .getOrElse(uniteLegale.nomUniteLegale.getOrElse(""))}"
+    uniteLegale.denominationUniteLegale.getOrElse(fallbackName)
   }
 
 }
