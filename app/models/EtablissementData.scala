@@ -28,13 +28,17 @@ case class EtablissementData(
     codeCommuneEtablissement: Option[String],
     codeCedexEtablissement: Option[String],
     libelleCedexEtablissement: Option[String],
-    denominationUsuelleEtablissement: Option[String],
-    ancienneDenominationUsuelleEtablissement: Option[String],
+    denomination: Option[String],
+    denominationUsuelle1UniteLegale: Option[String],
+    denominationUsuelle2UniteLegale: Option[String],
+    denominationUsuelle3UniteLegale: Option[String],
+    nomCommercialEtablissement: Option[String],
     enseigne1Etablissement: Option[String],
+    enseigne2Etablissement: Option[String],
+    enseigne3Etablissement: Option[String],
     activitePrincipaleEtablissement: Option[String],
     etatAdministratifEtablissement: Option[String],
-    statutDiffusionEtablissement: DisclosedStatus,
-    nomCommercialEtablissement: Option[String]
+    statutDiffusionEtablissement: DisclosedStatus
 ) {
 
   def isOpen = this.etatAdministratifEtablissement.getOrElse(Open) == Open
@@ -69,13 +73,26 @@ case class EtablissementData(
     )
   }
 
+  private def computeEnseigne: Option[String] = {
+    val list = List(enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement).flatten
+    if (list.isEmpty) None
+    else Some(list.mkString(" - "))
+  }
+
+  private def computeCommercialName: Option[String] = {
+    val list =
+      List(denominationUsuelle1UniteLegale, denominationUsuelle2UniteLegale, denominationUsuelle3UniteLegale).flatten
+    if (list.isEmpty) None
+    else Some(list.mkString(" - "))
+  }
+
   def toSearchResult(activityLabel: Option[String], isMarketPlace: Boolean = false, filterAdress: Boolean = true) =
     EtablissementSearchResult(
       siret = siret,
-      name = denominationUsuelleEtablissement,
-      oldName = ancienneDenominationUsuelleEtablissement,
-      commercialName = nomCommercialEtablissement,
-      brand = enseigne1Etablissement.filter(!denominationUsuelleEtablissement.contains(_)),
+      name = denomination,
+      commercialName = computeCommercialName,
+      establishmentCommercialName = nomCommercialEtablissement,
+      brand = computeEnseigne,
       isHeadOffice = etablissementSiege.exists(_.toBoolean),
       address = if (filterAdress) toFilteredAddress() else toAddress(),
       activityCode = activitePrincipaleEtablissement,
