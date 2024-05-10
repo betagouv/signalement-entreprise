@@ -17,7 +17,11 @@ class EtablissementRepositoryInterfaceMock(
 
   override def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] = ???
 
-  override def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
+  override def search(
+      q: String,
+      postalCode: Option[String],
+      onlyHeadOffice: Option[Boolean]
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
   override def searchBySirets(sirets: List[SIRET]): Future[List[(EtablissementData, Option[ActivityCode])]] =
     Future.successful(searchBySiretsFunc)
