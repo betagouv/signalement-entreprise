@@ -32,10 +32,23 @@ class EtablissementController(
 
   val logger: Logger = Logger(this.getClass)
 
-  def searchEtablissement(q: String, postalCode: String, lang: Option[Locale]) = Action.async { request =>
+  def searchEtablissement(
+      q: String,
+      postalCode: Option[String],
+      onlyHeadOffice: Option[Boolean],
+      lang: Option[Locale]
+  ) = Action.async { request =>
     val app = for {
-      results <- etablissementOrchestrator.searchEtablissement(q, postalCode, lang)
-      _ = logWhenNoResult("search_company_postalcode_no_result")(results, Map("postalcode" -> postalCode, "name" -> q))
+      results <- etablissementOrchestrator.searchEtablissement(q, postalCode, onlyHeadOffice, lang)
+      _ = logWhenNoResult("search_company_postalcode_no_result")(
+        results,
+        List(
+          postalCode.map(a => "postalcode" -> a),
+          onlyHeadOffice.map(a => "onlyHeadOffice" -> a.toString),
+          lang.map(a => "lang" -> a.toLanguageTag),
+          Some("name" -> q)
+        ).flatten.toMap
+      )
     } yield Ok(Json.toJson(results))
 
     app.recover { case err => handleError(request, err) }

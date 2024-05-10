@@ -11,7 +11,11 @@ trait EtablissementRepositoryInterface {
 
   def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int]
 
-  def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]]
+  def search(
+      q: String,
+      postalCode: Option[String],
+      onlyHeadOffice: Option[Boolean]
+  ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySirets(
       sirets: List[SIRET]
