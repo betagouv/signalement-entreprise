@@ -56,7 +56,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       postalCode: Option[String],
       onlyHeadOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] = {
-    val setThreshold: DBIO[Int] = sqlu"""SET pg_trgm.similarity_threshold = 0.68"""
+    val setThreshold: DBIO[Int] = sqlu"""SET pg_trgm.similarity_threshold = 0.32"""
     val searchQuery = table
       .filterOpt(onlyHeadOffice) { case (table, onlyHeadOffice) =>
         table.etablissementSiege === onlyHeadOffice.toString
