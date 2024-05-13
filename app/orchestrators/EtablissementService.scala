@@ -29,12 +29,13 @@ class EtablissementService(
 
   def searchEtablissement(
       q: String,
-      postalCode: String,
+      postalCode: Option[String],
+      onlyHeadOffice: Option[Boolean],
       lang: Option[Locale]
   ): Future[List[EtablissementSearchResult]] = {
     logger.info(s"searchEtablissement $postalCode $q")
     etablissementRepository
-      .search(q, postalCode)
+      .search(q, postalCode, onlyHeadOffice)
       .map(results => results.map(result => result._1.toSearchResult(result._2.map(extractActivityLabel(_, lang)))))
   }
 

@@ -51,42 +51,54 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         """)
   }
 
-  override def search(q: String, postalCode: String): Future[List[(EtablissementData, Option[ActivityCode])]] =
-    db.run(
-      table
-        .filter(_.codePostalEtablissement === postalCode)
-        .filter(filterClosedEtablissements)
-        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
-        .filter(result =>
-          least(
-            result.denomination <-> q,
-            result.denominationUsuelle1UniteLegale <-> q,
-            result.denominationUsuelle2UniteLegale <-> q,
-            result.denominationUsuelle3UniteLegale <-> q,
-            result.nomCommercialEtablissement <-> q,
-            result.enseigne1Etablissement <-> q,
-            result.enseigne2Etablissement <-> q,
-            result.enseigne3Etablissement <-> q
-          ).map(dist => dist < 0.68).getOrElse(false)
+  override def search(
+      q: String,
+      postalCode: Option[String],
+      onlyHeadOffice: Option[Boolean]
+  ): Future[List[(EtablissementData, Option[ActivityCode])]] = {
+    val setThreshold: DBIO[Int] = sqlu"""SET pg_trgm.similarity_threshold = 0.32"""
+    val searchQuery = table
+      .filterOpt(onlyHeadOffice) { case (table, onlyHeadOffice) =>
+        table.etablissementSiege === onlyHeadOffice.toString
+      }
+      .filterOpt(postalCode) { case (table, postalCode) => table.codePostalEtablissement === postalCode }
+      .filter(filterClosedEtablissements)
+      .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
+      .filter(result =>
+        result.denomination                      % q ||
+          result.denominationUsuelle1UniteLegale % q ||
+          result.denominationUsuelle2UniteLegale % q ||
+          result.denominationUsuelle3UniteLegale % q ||
+          result.nomCommercialEtablissement      % q ||
+          result.enseigne1Etablissement          % q ||
+          result.enseigne2Etablissement          % q ||
+          result.enseigne3Etablissement          % q
+      )
+      .joinLeft(ActivityCodeTable.table)
+      .on(_.activitePrincipaleEtablissement === _.code)
+      .sortBy { case (result, _) =>
+        least(
+          result.denomination <-> q,
+          result.denominationUsuelle1UniteLegale <-> q,
+          result.denominationUsuelle2UniteLegale <-> q,
+          result.denominationUsuelle3UniteLegale <-> q,
+          result.nomCommercialEtablissement <-> q,
+          result.enseigne1Etablissement <-> q,
+          result.enseigne2Etablissement <-> q,
+          result.enseigne3Etablissement <-> q
         )
-        .joinLeft(ActivityCodeTable.table)
-        .on(_.activitePrincipaleEtablissement === _.code)
-        .sortBy { case (result, _) =>
-          least(
-            result.denomination <-> q,
-            result.denominationUsuelle1UniteLegale <-> q,
-            result.denominationUsuelle2UniteLegale <-> q,
-            result.denominationUsuelle3UniteLegale <-> q,
-            result.nomCommercialEtablissement <-> q,
-            result.enseigne1Etablissement <-> q,
-            result.enseigne2Etablissement <-> q,
-            result.enseigne3Etablissement <-> q
-          )
-        }
-        .take(10)
-        .to[List]
-        .result
+      }
+      .take(20)
+      .to[List]
+      .result
+
+    db.run(
+      (for {
+        _       <- setThreshold
+        results <- searchQuery
+      } yield results).transactionally
     )
+  }
 
   override def searchBySirets(
       sirets: List[SIRET]
