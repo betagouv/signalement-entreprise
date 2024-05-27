@@ -28,9 +28,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
 
   import dbConfig._
 
-  private def least(elements: Rep[Option[Double]]*): Rep[Option[Double]] =
-    SimpleFunction[Option[Double]]("least").apply(elements)
-
   private[this] def filterClosedEtablissements(row: EtablissementTable): Rep[Boolean] =
     row.etatAdministratifEtablissement.getOrElse(Open) =!= Closed
 
@@ -51,12 +48,15 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         """)
   }
 
+  // Be careful when modifying this search, the order is important to use PG Indexes correctly.
+  // Check the generated query with an EXPLAIN if necessary.
   override def search(
       q: String,
       postalCode: Option[String],
       onlyHeadOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] = {
-    val setThreshold: DBIO[Int] = sqlu"""SET pg_trgm.similarity_threshold = 0.32"""
+    val setThreshold: DBIO[Int] =
+      sqlu"""SET pg_trgm.word_similarity_threshold = 0.5""" // Higher is more restrictive, can be refined if necessary
     val searchQuery = table
       .filterOpt(onlyHeadOffice) { case (table, onlyHeadOffice) =>
         table.etablissementSiege === onlyHeadOffice.toString
@@ -65,29 +65,12 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       .filter(filterClosedEtablissements)
       .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
       .filter(result =>
-        result.denomination                      % q ||
-          result.denominationUsuelle1UniteLegale % q ||
-          result.denominationUsuelle2UniteLegale % q ||
-          result.denominationUsuelle3UniteLegale % q ||
-          result.nomCommercialEtablissement      % q ||
-          result.enseigne1Etablissement          % q ||
-          result.enseigne2Etablissement          % q ||
-          result.enseigne3Etablissement          % q
-      )
+        result.searchColumnTrgm %> q
+      )            // word similarity and not similarity because we use a composite search column
+      .take(10000) // TO limit the following sort (can be really expensive). 10 000 is largely enough
       .joinLeft(ActivityCodeTable.table)
       .on(_.activitePrincipaleEtablissement === _.code)
-      .sortBy { case (result, _) =>
-        least(
-          result.denomination <-> q,
-          result.denominationUsuelle1UniteLegale <-> q,
-          result.denominationUsuelle2UniteLegale <-> q,
-          result.denominationUsuelle3UniteLegale <-> q,
-          result.nomCommercialEtablissement <-> q,
-          result.enseigne1Etablissement <-> q,
-          result.enseigne2Etablissement <-> q,
-          result.enseigne3Etablissement <-> q
-        )
-      }
+      .sortBy { case (result, _) => result.searchColumnTrgm <-> q }
       .take(20)
       .to[List]
       .result

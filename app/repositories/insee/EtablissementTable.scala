@@ -43,6 +43,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
   def activitePrincipaleEtablissement     = column[Option[String]]("activiteprincipaleetablissement")
   def etatAdministratifEtablissement      = column[Option[String]]("etatadministratifetablissement")
   def statutDiffusionEtablissement        = column[DisclosedStatus]("statutdiffusionetablissement")
+  def searchColumnTrgm                    = column[String]("search_column_trgm")
 
   type EtablissementHList =
     UUID ::
