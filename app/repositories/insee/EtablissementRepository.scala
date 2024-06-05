@@ -70,7 +70,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       .take(10000) // TO limit the following sort (can be really expensive). 10 000 is largely enough
       .joinLeft(ActivityCodeTable.table)
       .on(_.activitePrincipaleEtablissement === _.code)
-      .sortBy { case (result, _) => result.searchColumnTrgm <-> q }
+      .sortBy { case (result, _) => result.searchColumnTrgm <->> q } // Sorting by word similarity dist
       .take(20)
       .to[List]
       .result
