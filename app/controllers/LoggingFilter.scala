@@ -1,7 +1,7 @@
 package controllers
 
-import akka.stream.Materializer
 import controllers.Logs.RichLogger
+import org.apache.pekko.stream.Materializer
 import play.api.Logging
 import play.api.mvc._
 
