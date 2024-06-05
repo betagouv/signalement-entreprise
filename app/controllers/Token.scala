@@ -1,9 +1,9 @@
 package controllers
 
-import akka.util.ByteString
 import cats.implicits.catsSyntaxOption
 import controllers.error.ApiError.InvalidToken
 import de.mkammerer.argon2.Argon2Factory
+import org.apache.pekko.util.ByteString
 import play.api.mvc.Request
 
 import scala.concurrent.ExecutionContext
