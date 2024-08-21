@@ -53,12 +53,16 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
   override def search(
       q: String,
       postalCode: Option[String],
-      onlyHeadOffice: Option[Boolean]
+      // departmentCode is not used for now
+      // it is a bit complex to know the departmentCode of the etablissement
+      departmentCode: Option[String],
+      headOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] = {
     val setThreshold: DBIO[Int] =
-      sqlu"""SET pg_trgm.word_similarity_threshold = 0.5""" // Higher is more restrictive, can be refined if necessary
+      sqlu"""SET pg_trgm.word_similarity_threshold = 0.75"""
+    // Higher is more restrictive, can be refined if necessary
     val searchQuery = table
-      .filterOpt(onlyHeadOffice) { case (table, onlyHeadOffice) =>
+      .filterOpt(headOffice) { case (table, onlyHeadOffice) =>
         table.etablissementSiege === onlyHeadOffice.toString
       }
       .filterOpt(postalCode) { case (table, postalCode) => table.codePostalEtablissement === postalCode }
