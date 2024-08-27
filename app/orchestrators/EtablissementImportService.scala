@@ -1,9 +1,12 @@
 package orchestrators
 
 import cats.implicits.toTraverseOps
+import clients.GeoApiClient
+import clients.InseeClient
 import config.SignalConsoConfiguration
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
+import models.GeoApiCommune
 import models.ImportRequest
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Header
@@ -21,6 +24,7 @@ import scala.util.chaining.scalaUtilChainingOps
 
 class EtablissementImportService(
     inseeClient: InseeClient,
+    geoApiClient: GeoApiClient,
     repository: EtablissementRepositoryInterface,
     entrepriseImportRepository: EnterpriseImportInfoRepository,
     signalConsoConfiguration: SignalConsoConfiguration
@@ -45,6 +49,7 @@ class EtablissementImportService(
           )
           Some(DisclosedStatus.Public)
         } else None
+      allCommunes <- geoApiClient.getAllCommunes()
       query = InseeEtablissementQuery(
         token = token,
         beginPeriod = importRequest.begin,
@@ -54,20 +59,22 @@ class EtablissementImportService(
       )
       firstCall <- inseeClient.getEtablissement(query)
       _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
-      _ <- iterate(query)
+      _ <- iterate(query, allCommunes)
     } yield ()
 
   def importEtablissements(): Future[Unit] =
     entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
       (for {
-        _         <- validateIfRunning(batchInfo.id)
-        query     <- computeQuery()
-        firstCall <- inseeClient.getEtablissement(query)
+        _           <- validateIfRunning(batchInfo.id)
+        allCommunes <- geoApiClient.getAllCommunes()
+        query       <- computeQuery()
+        firstCall   <- inseeClient.getEtablissement(query)
         _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
         _ <- entrepriseImportRepository.updateLineCount(batchInfo.id, firstCall.header.total.toDouble)
         _ <- iterateThroughEtablissement(
           query,
-          executionId = batchInfo.id
+          executionId = batchInfo.id,
+          allCommunes
         )
         _ <- entrepriseImportRepository.updateEndedAt(batchInfo.id)
         _ = logger.info(s"Job ended successfully")
@@ -135,14 +142,16 @@ class EtablissementImportService(
 
   private def iterate(
       query: InseeEtablissementQuery,
+      allCommunes: Seq[GeoApiCommune],
       header: Option[Header] = None
   ): Future[InseeEtablissementResponse] =
     for {
-      etablissementResponse <- process(query, header)
+      etablissementResponse <- process(query, header, allCommunes)
       nextIteration <-
         if (etablissementResponse.header.nombre == InseeClient.EtablissementPageSize) {
           iterate(
             query,
+            allCommunes,
             Some(etablissementResponse.header)
           )
         } else {
@@ -154,6 +163,7 @@ class EtablissementImportService(
   private def iterateThroughEtablissement(
       query: InseeEtablissementQuery,
       executionId: UUID,
+      allCommunes: Seq[GeoApiCommune],
       header: Option[Header] = None,
       lineCount: Option[Int] = None
   ): Future[InseeEtablissementResponse] =
@@ -162,7 +172,8 @@ class EtablissementImportService(
         query,
         executionId,
         header,
-        lineCount
+        lineCount,
+        allCommunes
       )
       linesDone = lineCount.getOrElse(0) + InseeClient.EtablissementPageSize
       nextIteration <-
@@ -170,6 +181,7 @@ class EtablissementImportService(
           iterateThroughEtablissement(
             query,
             executionId,
+            allCommunes,
             Some(etablissementResponse.header),
             Some(linesDone)
           )
@@ -181,7 +193,8 @@ class EtablissementImportService(
 
   private def process(
       query: InseeEtablissementQuery,
-      header: Option[Header]
+      header: Option[Header],
+      allCommunes: Seq[GeoApiCommune]
   ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- inseeClient
@@ -189,17 +202,18 @@ class EtablissementImportService(
           query,
           cursor = header.flatMap(_.curseurSuivant)
         )
-      _ <- insertOrUpdateEtablissements(etablissementResponse)
+      _ <- insertOrUpdateEtablissements(etablissementResponse, allCommunes)
     } yield etablissementResponse
 
   private def processEtablissement(
       query: InseeEtablissementQuery,
       executionId: UUID,
       header: Option[Header],
-      lineCount: Option[Int]
+      lineCount: Option[Int],
+      allCommunes: Seq[GeoApiCommune]
   ): Future[InseeEtablissementResponse] =
     for {
-      etablissementResponse <- process(query, header)
+      etablissementResponse <- process(query, header, allCommunes)
       lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(e =>
         toOffsetDateTime(e.dateDernierTraitementEtablissement)
       )
@@ -208,10 +222,16 @@ class EtablissementImportService(
       _ = logger.info(s"Processed $linesDone / ${etablissementResponse.header.total} lines so far")
     } yield etablissementResponse
 
-  private def insertOrUpdateEtablissements(etablissementResponse: InseeEtablissementResponse): Future[List[Int]] =
+  private def insertOrUpdateEtablissements(
+      etablissementResponse: InseeEtablissementResponse,
+      allCommunes: Seq[GeoApiCommune]
+  ): Future[List[Int]] =
     etablissementResponse.etablissements.map { etablissement =>
-      val denomination                             = denominationFromUniteLegale(etablissement.uniteLegale)
-      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination)
+      val denomination     = denominationFromUniteLegale(etablissement.uniteLegale)
+      val maybeCodeCommune = etablissement.adresseEtablissement.codeCommuneEtablissement
+      val maybeCodeDepartement =
+        maybeCodeCommune.flatMap(code => allCommunes.find(_.code == code)).map(_.codeDepartement)
+      val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, maybeCodeDepartement)
       repository.insertOrUpdate(companyData)
     }.sequence
 
