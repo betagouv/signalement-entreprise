@@ -27,6 +27,28 @@ class EtablissementService(
       case _                    => activityCode.label
     }
 
+  def searchSmart(q: String, postalCode: Option[String], departementCode: Option[String], lang: Locale) = {
+    logger.info(s"searchSmart $postalCode $departementCode $q")
+    for {
+      results <- extractIdentity(q) match {
+        case Some(Left(siren)) =>
+          searchEtablissementBySiren(siren, openCompaniesOnly = false, onlyHeadOffice = true)
+        case Some(Right(siret)) =>
+          etablissementRepository.searchBySiretWithHeadOffice(siret, openCompaniesOnly = false)
+        case None =>
+          // When searching nationally, for example for "Feu vert"
+          // it is not useful to return the thousands of physical stores
+          val onlyHeadOffice = postalCode.isEmpty && departementCode.isEmpty
+          etablissementRepository.search(
+            q,
+            postalCode,
+            departementCode,
+            headOffice = if (onlyHeadOffice) Some(true) else None
+          )
+      }
+    } yield results.map(result => result._1.toSearchResult(result._2.map(extractActivityLabel(_, Some(lang)))))
+  }
+
   def searchEtablissement(
       q: String,
       postalCode: Option[String],
@@ -35,7 +57,7 @@ class EtablissementService(
   ): Future[List[EtablissementSearchResult]] = {
     logger.info(s"searchEtablissement $postalCode $q")
     etablissementRepository
-      .search(q, postalCode, onlyHeadOffice)
+      .search(q, postalCode, departmentCode = None, onlyHeadOffice)
       .map(results => results.map(result => result._1.toSearchResult(result._2.map(extractActivityLabel(_, lang)))))
   }
 

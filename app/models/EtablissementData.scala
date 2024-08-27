@@ -73,15 +73,16 @@ case class EtablissementData(
     )
   }
 
-  private def computeEnseigne: Option[String] = {
-    val list = List(enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement).flatten
+  private[models] def computeEnseigne: Option[String] = {
+    val list = List(enseigne1Etablissement, enseigne2Etablissement, enseigne3Etablissement).flatten.filterNot(_.isBlank)
     if (list.isEmpty) None
     else Some(list.mkString(" - "))
   }
 
-  private def computeCommercialName: Option[String] = {
+  private[models] def computeCommercialName: Option[String] = {
     val list =
       List(denominationUsuelle1UniteLegale, denominationUsuelle2UniteLegale, denominationUsuelle3UniteLegale).flatten
+        .filterNot(_.isBlank)
     if (list.isEmpty) None
     else Some(list.mkString(" - "))
   }

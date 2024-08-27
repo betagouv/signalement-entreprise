@@ -20,7 +20,8 @@ class EtablissementRepositoryInterfaceMock(
   override def search(
       q: String,
       postalCode: Option[String],
-      onlyHeadOffice: Option[Boolean]
+      departmentCode: Option[String],
+      headOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] = ???
 
   override def searchBySirets(sirets: List[SIRET]): Future[List[(EtablissementData, Option[ActivityCode])]] =

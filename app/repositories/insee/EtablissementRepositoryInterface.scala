@@ -14,7 +14,8 @@ trait EtablissementRepositoryInterface {
   def search(
       q: String,
       postalCode: Option[String],
-      onlyHeadOffice: Option[Boolean]
+      departmentCode: Option[String],
+      headOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]]
 
   def searchBySirets(

@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+
+GET         /api/companies/search/smart            controllers.EtablissementController.searchSmart(q: String, postalCode: Option[String], departmentCode: Option[String], lang: java.util.Locale)
 GET         /api/companies/search/:identity        controllers.EtablissementController.searchEtablissementByIdentity(identity: String, openOnly :Option[Boolean], lang: Option[java.util.Locale])
 GET         /api/companies/search                  controllers.EtablissementController.searchEtablissement(q: String, postalCode: Option[String], onlyHeadOffice: Option[Boolean], lang: Option[java.util.Locale])
 POST        /api/companies/search                  controllers.EtablissementController.getBySiret(lang: Option[java.util.Locale])
