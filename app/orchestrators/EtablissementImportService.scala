@@ -31,7 +31,7 @@ class EtablissementImportService(
   private[this] val logger = Logger(this.getClass)
 
   // One shot, API
-  def importEtablissements(importRequest: ImportRequest): Future[Unit] =
+  def runImportEtablissementsRequest(importRequest: ImportRequest): Future[Unit] =
     for {
       running <- entrepriseImportRepository.findRunning()
       _ <-
@@ -57,7 +57,7 @@ class EtablissementImportService(
       _ <- iterate(query)
     } yield ()
 
-  def importEtablissement(): Future[Unit] =
+  def importEtablissements(): Future[Unit] =
     entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
       (for {
         _         <- validateIfRunning(batchInfo.id)
@@ -81,7 +81,7 @@ class EtablissementImportService(
       }
     }
 
-  def updateError(batchId: UUID, e: Throwable): Future[Unit] = entrepriseImportRepository
+  private def updateError(batchId: UUID, e: Throwable): Future[Unit] = entrepriseImportRepository
     .updateError(batchId, error = s"${e.getMessage} : ${e.getCause}")
     .flatMap(_ => Future.failed[Unit](e))
 
