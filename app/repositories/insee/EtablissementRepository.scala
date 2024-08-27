@@ -53,8 +53,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
   override def search(
       q: String,
       postalCode: Option[String],
-      // departmentCode is not used for now
-      // it is a bit complex to know the departmentCode of the etablissement
       departmentCode: Option[String],
       headOffice: Option[Boolean]
   ): Future[List[(EtablissementData, Option[ActivityCode])]] = {
@@ -66,6 +64,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         table.etablissementSiege === onlyHeadOffice.toString
       }
       .filterOpt(postalCode) { case (table, postalCode) => table.codePostalEtablissement === postalCode }
+      .filterOpt(departmentCode) { case (table, departmentCode) => table.codeDepartement === departmentCode }
       .filter(filterClosedEtablissements)
       .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
       .filter(result =>

@@ -2,8 +2,10 @@ package controllers.error
 
 sealed trait AppError extends Throwable with Product with Serializable
 
-case class InseeTokenGenerationError(message: String)          extends AppError
-case class InseeEtablissementError(message: String)            extends Exception(message) with AppError
+case class InseeTokenGenerationError(message: String) extends AppError
+case class InseeEtablissementError(message: String)   extends Exception(message) with AppError
+
+case class GeoApiError(message: String)                        extends Exception(message) with AppError
 case class EtablissementJobAleadyRunningError(message: String) extends Exception(message) with AppError
 sealed trait ApiError extends AppError {
   val `type`: String
