@@ -32,6 +32,27 @@ class EtablissementController(
 
   val logger: Logger = Logger(this.getClass)
 
+  def searchSmart(
+      q: String,
+      postalCode: Option[String],
+      departmentCode: Option[String],
+      lang: Locale
+  ) = Action.async { request =>
+    val app = for {
+      results <- etablissementOrchestrator.searchSmart(q, postalCode, departmentCode, lang)
+      _ = logWhenNoResult("search_smart_no_result")(
+        results,
+        List(
+          postalCode.map(a => "postalcode" -> a),
+          departmentCode.map(a => "departmentCode" -> a),
+          Some("lang" -> lang.toLanguageTag),
+          Some("name" -> q)
+        ).flatten.toMap
+      )
+    } yield Ok(Json.toJson(results))
+    app.recover { case err => handleError(request, err) }
+  }
+
   def searchEtablissement(
       q: String,
       postalCode: Option[String],
