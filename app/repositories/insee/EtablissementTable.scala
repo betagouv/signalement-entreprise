@@ -44,6 +44,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
   def etatAdministratifEtablissement      = column[Option[String]]("etatadministratifetablissement")
   def statutDiffusionEtablissement        = column[DisclosedStatus]("statutdiffusionetablissement")
   def searchColumnTrgm                    = column[String]("search_column_trgm")
+  def codeDepartement                     = column[Option[String]]("codedepartement")
 
   type EtablissementHList =
     UUID ::
@@ -75,6 +76,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
       Option[String] ::
       Option[String] ::
       DisclosedStatus ::
+      Option[String] ::
       HNil
 
   def constructEtablissement(etablissement: EtablissementHList): EtablissementData = etablissement match {
@@ -107,6 +109,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         activitePrincipaleEtablissement ::
         etatAdministratifEtablissement ::
         statutDiffusionEtablissement ::
+        codeDepartement ::
         HNil =>
       EtablissementData(
         id = id,
@@ -137,7 +140,8 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         enseigne3Etablissement = enseigne3Etablissement,
         activitePrincipaleEtablissement = activitePrincipaleEtablissement,
         etatAdministratifEtablissement = etatAdministratifEtablissement,
-        statutDiffusionEtablissement = statutDiffusionEtablissement
+        statutDiffusionEtablissement = statutDiffusionEtablissement,
+        codeDepartement = codeDepartement
       )
   }
 
@@ -172,6 +176,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
         etablissement.activitePrincipaleEtablissement ::
         etablissement.etatAdministratifEtablissement ::
         etablissement.statutDiffusionEtablissement ::
+        etablissement.codeDepartement ::
         HNil
     )
 
@@ -205,6 +210,7 @@ class EtablissementTable(tag: Tag) extends Table[EtablissementData](tag, "etabli
       activitePrincipaleEtablissement ::
       etatAdministratifEtablissement ::
       statutDiffusionEtablissement ::
+      codeDepartement ::
       HNil
   ) <> (constructEtablissement, extractEtablissement)
 }

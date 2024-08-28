@@ -1,16 +1,18 @@
-package orchestrators
+package clients
 
+import cats.syntax.either._
+import clients.InseeClient.EtablissementPageSize
+import clients.InseeClient.InitialCursor
+import clients.InseeClient.LastModifiedField
+import clients.InseeClient.WildCardPeriod
 import config.InseeTokenConfiguration
 import controllers.error.InseeEtablissementError
 import controllers.error.InseeTokenGenerationError
+import models.SIRET
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.token.InseeEtablissementQuery
 import models.insee.token.InseeTokenResponse
-import orchestrators.InseeClient.EtablissementPageSize
-import orchestrators.InseeClient.InitialCursor
-import orchestrators.InseeClient.LastModifiedField
-import orchestrators.InseeClient.WildCardPeriod
 import play.api.Logger
 import play.api.libs.json.JsError
 import sttp.client3.playJson.asJson
@@ -21,12 +23,10 @@ import sttp.client3.Response
 import sttp.client3.ResponseException
 import sttp.client3.UriContext
 import sttp.client3.basicRequest
-import sttp.model.StatusCode
-import sttp.model.Uri
-import cats.syntax.either._
-import models.SIRET
 import sttp.model.Uri.QuerySegment
 import sttp.model.Uri.QuerySegment.KeyValue
+import sttp.model.StatusCode
+import sttp.model.Uri
 
 import java.time.OffsetDateTime
 import scala.concurrent.ExecutionContext

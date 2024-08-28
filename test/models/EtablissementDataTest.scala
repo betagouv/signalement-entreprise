@@ -37,7 +37,8 @@ class EtablissementDataTest extends Specification {
         enseigne3Etablissement = None,
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
-        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy
+        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
+        codeDepartement = None
       )
       data.computeCommercialName must beNone
     }
@@ -71,7 +72,8 @@ class EtablissementDataTest extends Specification {
         enseigne3Etablissement = Some("   "),
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
-        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy
+        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
+        codeDepartement = Some("  ")
       )
       data.computeCommercialName must beNone
       data.computeEnseigne must beNone
@@ -106,7 +108,8 @@ class EtablissementDataTest extends Specification {
         enseigne3Etablissement = Some("Name6"),
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
-        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy
+        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
+        codeDepartement = Some("75")
       )
       data.computeCommercialName must beSome("Name1 - Name2 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5 - Name6")
@@ -141,7 +144,8 @@ class EtablissementDataTest extends Specification {
         enseigne3Etablissement = Some("Name5"),
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
-        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy
+        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
+        codeDepartement = Some("75")
       )
       data.computeCommercialName must beSome("Name1 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5")
@@ -176,7 +180,8 @@ class EtablissementDataTest extends Specification {
         enseigne3Etablissement = Some("Name5"),
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
-        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy
+        statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
+        codeDepartement = Some("75")
       )
       data.computeCommercialName must beSome("Name1 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5")

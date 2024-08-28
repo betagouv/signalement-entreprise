@@ -119,7 +119,7 @@ class EtablissementController(
       _             <- validateToken(request, token)
       importRequest <- request.parseBody[ImportRequest]()
       _ = logger.debug(s"Import etablissements $importRequest")
-      _ <- importService.importEtablissements(importRequest)
+      _ <- importService.runImportEtablissementsRequest(importRequest)
     } yield NoContent
     res.recover { case err => handleError(request, err) }
   }

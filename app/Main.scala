@@ -1,5 +1,7 @@
 import _root_.controllers._
-
+import clients.GeoApiClient
+import clients.InseeClient
+import clients.InseeClientImpl
 import config.ApplicationConfiguration
 import orchestrators._
 import play.api._
@@ -71,16 +73,19 @@ class SignalConsoComponents(
 
   val inseeClient: InseeClient = new InseeClientImpl(applicationConfiguration.app.inseeToken)
 
+  val geoApiClient = new GeoApiClient()
+
   val etablissementService =
     new EtablissementImportService(
       inseeClient,
+      geoApiClient,
       companyDataRepository,
       enterpriseImportInfoRepository,
       applicationConfiguration.app
     )
 
   actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
-    etablissementService.importEtablissement(): Unit
+    etablissementService.importEtablissements(): Unit
   }: Unit
 
   val companyOrchestrator = new EtablissementService(
