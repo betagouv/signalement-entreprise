@@ -1,4 +1,4 @@
-package models
+package models.api
 
 import play.api.libs.json.Json
 import play.api.libs.json.OFormat
@@ -7,7 +7,8 @@ import play.api.libs.json.OFormat
 case class GeoApiCommune(
     // le code commune INSEE
     code: String,
-    codeDepartement: String
+    codeDepartement: String,
+    codesPostaux: Seq[String]
 )
 
 object GeoApiCommune {
