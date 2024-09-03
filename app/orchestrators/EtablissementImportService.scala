@@ -6,8 +6,8 @@ import clients.InseeClient
 import config.SignalConsoConfiguration
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
-import models.GeoApiCommune
 import models.ImportRequest
+import models.api.GeoApiCommune
 import models.insee.etablissement.DisclosedStatus
 import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
@@ -16,6 +16,7 @@ import models.insee.token.InseeEtablissementQuery
 import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
+import utils.Departments
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -227,10 +228,8 @@ class EtablissementImportService(
       allCommunes: Seq[GeoApiCommune]
   ): Future[List[Int]] =
     etablissementResponse.etablissements.map { etablissement =>
-      val denomination     = denominationFromUniteLegale(etablissement.uniteLegale)
-      val maybeCodeCommune = etablissement.adresseEtablissement.codeCommuneEtablissement
-      val maybeCodeDepartement =
-        maybeCodeCommune.flatMap(code => allCommunes.find(_.code == code)).map(_.codeDepartement)
+      val denomination         = denominationFromUniteLegale(etablissement.uniteLegale)
+      val maybeCodeDepartement = Departments.findCodeDepartementOfEtablissement(etablissement, allCommunes)
       val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, maybeCodeDepartement)
       repository.insertOrUpdate(companyData)
     }.sequence

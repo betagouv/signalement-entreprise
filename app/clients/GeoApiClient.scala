@@ -1,7 +1,7 @@
 package clients
 import cats.syntax.either._
 import controllers.error.GeoApiError
-import models.GeoApiCommune
+import models.api.GeoApiCommune
 import play.api.Logger
 
 import scala.concurrent.ExecutionContext
