@@ -5,11 +5,11 @@ import models.insee.etablissement.InseeEtablissement
 
 object Departments {
   def findCodeDepartementOfEtablissement(
-                                          etablissement: InseeEtablissement,
-                                          allCommunes: Seq[GeoApiCommune]
-                                        ): Option[String] = {
+      etablissement: InseeEtablissement,
+      allCommunes: Seq[GeoApiCommune]
+  ): Option[String] = {
     val codeCommune = etablissement.adresseEtablissement.codeCommuneEtablissement
-    val codePostal = etablissement.adresseEtablissement.codePostalEtablissement
+    val codePostal  = etablissement.adresseEtablissement.codePostalEtablissement
 
     val commune = codeCommune
       .flatMap(code => allCommunes.find(_.code == code))
