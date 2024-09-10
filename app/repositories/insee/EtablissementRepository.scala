@@ -48,6 +48,14 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         """)
   }
 
+  override def updateDepartment(siret: SIRET, codeDepartment: String): Future[Int] =
+    db.run(
+      table
+        .filter(_.siret === siret)
+        .map(a => a.codeDepartement)
+        .update(Some(codeDepartment))
+    )
+
   // Be careful when modifying this search, the order is important to use PG Indexes correctly.
   // Check the generated query with an EXPLAIN if necessary.
   override def search(
@@ -150,6 +158,17 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         .to[List]
         .result
     ).map(_.headOption)
+
+  override def listWithoutMissingDepartment(limit: Int): Future[Seq[EtablissementData]] =
+    db.run(
+      table
+        .filter(_.codeDepartement.isEmpty)
+        .filter(_.codePostalEtablissement.isDefined)
+        .filter(_.codePaysEtrangerEtablissement.isEmpty)
+        .filter(_.libellePaysEtrangerEtablissement.isEmpty)
+        .take(limit)
+        .result
+    )
 }
 
 object EtablissementRepository {

@@ -124,6 +124,22 @@ class EtablissementController(
     res.recover { case err => handleError(request, err) }
   }
 
+  def fillDepartementWithLimit() = Action.async { request =>
+    val res = for {
+      _ <- validateToken(request, token)
+      _ <- importService.fillDepartmentWithLimit()
+    } yield NoContent
+    res.recover { case err => handleError(request, err) }
+  }
+
+  def fillDepartementUntilAllDone() = Action.async { request =>
+    val res = for {
+      _ <- validateToken(request, token)
+      _ <- importService.fillDepartementUntilAllDone()
+    } yield NoContent
+    res.recover { case err => handleError(request, err) }
+  }
+
 }
 
 object EtablissementController {

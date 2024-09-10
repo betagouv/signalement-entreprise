@@ -39,7 +39,8 @@ case class EtablissementData(
     activitePrincipaleEtablissement: Option[String],
     etatAdministratifEtablissement: Option[String],
     statutDiffusionEtablissement: DisclosedStatus,
-    codeDepartement: Option[String]
+    codeDepartement: Option[String],
+    libellePaysEtrangerEtablissement: Option[String]
 ) {
 
   def isOpen = this.etatAdministratifEtablissement.getOrElse(Open) == Open

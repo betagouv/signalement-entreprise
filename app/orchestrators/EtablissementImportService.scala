@@ -4,6 +4,7 @@ import cats.implicits.toTraverseOps
 import clients.GeoApiClient
 import clients.InseeClient
 import config.SignalConsoConfiguration
+import controllers.error.ApiError.ServerError
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
 import models.ImportRequest
@@ -34,6 +35,42 @@ class EtablissementImportService(
 ) {
 
   private[this] val logger = Logger(this.getClass)
+
+  // This fill the department column for every etablissement that still doesn't have it
+  // We should only need to use this once, can be deleted after
+  def fillDepartementUntilAllDone(): Future[Unit] =
+    for {
+      rowsProcessed <- fillDepartmentWithLimit()
+      _ <-
+        if (rowsProcessed == 0) {
+          logger.info("All etablissements filled with departments ")
+          Future.successful(())
+        } else {
+          fillDepartementUntilAllDone()
+        }
+    } yield ()
+
+  def fillDepartmentWithLimit(): Future[Int] =
+    for {
+      allCommunes    <- geoApiClient.getAllCommunes()
+      etablissements <- repository.listWithoutMissingDepartment(100)
+      _ = logger.info(s"Filling codeDepartement for ${etablissements.length} etablissements")
+      _ <- etablissements.foldLeft(Future.unit) { case (previous, etab) =>
+        for {
+          _ <- previous
+          maybeCodeDepartment = Departments.findCodeDepartementOfEtablissement(Right(etab), allCommunes)
+          _ <- maybeCodeDepartment match {
+            case Some(codeDepartement) =>
+              repository.updateDepartment(etab.siret, codeDepartement)
+            case None =>
+              throw ServerError(
+                s"Can't find code departement for etablissement ${etab.siret} (CP ${etab.codePostalEtablissement})"
+              )
+          }
+        } yield ()
+      }
+      _ = logger.info(s"Filled codeDepartement for ${etablissements.length} etablissements")
+    } yield etablissements.length
 
   // One shot, API
   def runImportEtablissementsRequest(importRequest: ImportRequest): Future[Unit] =
@@ -116,7 +153,9 @@ class EtablissementImportService(
           throw EtablissementJobAleadyRunningError(
             s"Jobs with id  ${jobsRunning.map(_.id.toString()).mkString(",")} already running"
           )
-        } else { () }
+        } else {
+          ()
+        }
     } yield res
 
   private def computeQuery() =
@@ -229,7 +268,7 @@ class EtablissementImportService(
   ): Future[List[Int]] =
     etablissementResponse.etablissements.map { etablissement =>
       val denomination         = denominationFromUniteLegale(etablissement.uniteLegale)
-      val maybeCodeDepartement = Departments.findCodeDepartementOfEtablissement(etablissement, allCommunes)
+      val maybeCodeDepartement = Departments.findCodeDepartementOfEtablissement(Left(etablissement), allCommunes)
       val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, maybeCodeDepartement)
       repository.insertOrUpdate(companyData)
     }.sequence

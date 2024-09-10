@@ -9,3 +9,5 @@ GET         /api/companies/search                  controllers.EtablissementCont
 POST        /api/companies/search                  controllers.EtablissementController.getBySiret(lang: Option[java.util.Locale])
 POST        /api/companies/siren/search            controllers.EtablissementController.getBySiren(lang: Option[java.util.Locale], onlyHeadOffice: Option[Boolean])
 POST        /api/companies/import                  controllers.EtablissementController.importEtablissements()
+POST        /api/companies/fill-department         controllers.EtablissementController.fillDepartementWithLimit()
+POST        /api/companies/fill-department/all     controllers.EtablissementController.fillDepartementUntilAllDone()

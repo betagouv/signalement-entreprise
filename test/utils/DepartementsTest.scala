@@ -61,7 +61,7 @@ class DepartementsTest extends Specification {
         codeCommuneEtablissement = toulon.code,
         codePostalEtablissement = None
       )
-      val res = Departments.findCodeDepartementOfEtablissement(etab, allCommunes)
+      val res = Departments.findCodeDepartementOfEtablissement(Left(etab), allCommunes)
       res must beSome(toulon.codeDepartement)
     }
     "find code departement in another basic commune, without relying on code postal" >> {
@@ -69,7 +69,7 @@ class DepartementsTest extends Specification {
         codeCommuneEtablissement = tournefeuille.code,
         codePostalEtablissement = None
       )
-      val res = Departments.findCodeDepartementOfEtablissement(etab, allCommunes)
+      val res = Departments.findCodeDepartementOfEtablissement(Left(etab), allCommunes)
       res must beSome(tournefeuille.codeDepartement)
     }
     "find code departement for an arrondissement of Lyon" >> {
@@ -77,7 +77,7 @@ class DepartementsTest extends Specification {
         codeCommuneEtablissement = lyon7thArrondissement.code,
         codePostalEtablissement = Some(lyon7thArrondissement.codesPostaux.head)
       )
-      val res = Departments.findCodeDepartementOfEtablissement(etab, allCommunes)
+      val res = Departments.findCodeDepartementOfEtablissement(Left(etab), allCommunes)
       res must beSome(lyon7thArrondissement.codeDepartement)
     }
     "find code departement for a former commune (Châtres-la-Forêt) " >> {
@@ -85,7 +85,7 @@ class DepartementsTest extends Specification {
         codeCommuneEtablissement = chatresLaForet.code,
         codePostalEtablissement = Some(chatresLaForet.codesPostaux.head)
       )
-      val res = Departments.findCodeDepartementOfEtablissement(etab, allCommunes)
+      val res = Departments.findCodeDepartementOfEtablissement(Left(etab), allCommunes)
       res must beSome(chatresLaForet.codeDepartement)
     }
     "doesn't find code departement for an etablissement with a postal code in a foreign country" >> {
@@ -94,7 +94,7 @@ class DepartementsTest extends Specification {
         codePostalEtablissement = Some("99109"),
         libellePaysEtrangerEtablissement = Some("ALLEMAGNE")
       )
-      val res = Departments.findCodeDepartementOfEtablissement(etab, allCommunes)
+      val res = Departments.findCodeDepartementOfEtablissement(Left(etab), allCommunes)
       res must beNone
     }
 

@@ -11,6 +11,8 @@ trait EtablissementRepositoryInterface {
 
   def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int]
 
+  def updateDepartment(siret: SIRET, codeDepartment: String): Future[Int]
+
   def search(
       q: String,
       postalCode: Option[String],
@@ -37,4 +39,5 @@ trait EtablissementRepositoryInterface {
       openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]]
 
+  def listWithoutMissingDepartment(limit: Int): Future[Seq[EtablissementData]]
 }
