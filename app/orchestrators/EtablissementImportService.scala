@@ -4,7 +4,6 @@ import cats.implicits.toTraverseOps
 import clients.GeoApiClient
 import clients.InseeClient
 import config.SignalConsoConfiguration
-import controllers.error.ApiError.ServerError
 import controllers.error.EtablissementJobAleadyRunningError
 import models.EnterpriseImportInfo
 import models.ImportRequest
@@ -25,14 +24,14 @@ import scala.concurrent.Future
 import scala.util.chaining.scalaUtilChainingOps
 
 class EtablissementImportService(
-    inseeClient: InseeClient,
-    geoApiClient: GeoApiClient,
-    repository: EtablissementRepositoryInterface,
-    entrepriseImportRepository: EnterpriseImportInfoRepository,
-    signalConsoConfiguration: SignalConsoConfiguration
-)(implicit
-    ec: ExecutionContext
-) {
+                                  inseeClient: InseeClient,
+                                  geoApiClient: GeoApiClient,
+                                  repository: EtablissementRepositoryInterface,
+                                  entrepriseImportRepository: EnterpriseImportInfoRepository,
+                                  signalConsoConfiguration: SignalConsoConfiguration
+                                )(implicit
+                                  ec: ExecutionContext
+                                ) {
 
   private[this] val logger = Logger(this.getClass)
 
@@ -52,24 +51,23 @@ class EtablissementImportService(
 
   def fillDepartmentWithLimit(): Future[Int] =
     for {
-      allCommunes    <- geoApiClient.getAllCommunes()
+      allCommunes <- geoApiClient.getAllCommunes()
       etablissements <- repository.listWithoutMissingDepartment(100)
       _ = logger.info(s"Filling codeDepartement for ${etablissements.length} etablissements")
-      _ <- etablissements.foldLeft(Future.unit) { case (previous, etab) =>
+      rowsSuccess <- etablissements.foldLeft(Future.successful(0)) { case (previous, etab) =>
         for {
-          _ <- previous
+          previousCount <- previous
           maybeCodeDepartment = Departments.findCodeDepartementOfEtablissement(Right(etab), allCommunes)
-          _ <- maybeCodeDepartment match {
+          rowsUpdatedSuccessfully <- maybeCodeDepartment match {
             case Some(codeDepartement) =>
               repository.updateDepartment(etab.siret, codeDepartement)
             case None =>
-              throw ServerError(
-                s"Can't find code departement for etablissement ${etab.siret} (CP ${etab.codePostalEtablissement})"
-              )
+              logger.warn(s"Can't find departement of ${etab.siret} (CP ${etab.codePostalEtablissement})")
+              Future.successful(0)
           }
-        } yield ()
+        } yield previousCount + rowsUpdatedSuccessfully
       }
-      _ = logger.info(s"Filled codeDepartement for ${etablissements.length} etablissements")
+      _ = logger.info(s"Filled codeDepartement for $rowsSuccess/${etablissements.length} etablissements")
     } yield etablissements.length
 
   // One shot, API
@@ -103,10 +101,10 @@ class EtablissementImportService(
   def importEtablissements(): Future[Unit] =
     entrepriseImportRepository.create(EnterpriseImportInfo(linesCount = 0)).flatMap { batchInfo =>
       (for {
-        _           <- validateIfRunning(batchInfo.id)
+        _ <- validateIfRunning(batchInfo.id)
         allCommunes <- geoApiClient.getAllCommunes()
-        query       <- computeQuery()
-        firstCall   <- inseeClient.getEtablissement(query)
+        query <- computeQuery()
+        firstCall <- inseeClient.getEtablissement(query)
         _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
         _ <- entrepriseImportRepository.updateLineCount(batchInfo.id, firstCall.header.total.toDouble)
         _ <- iterateThroughEtablissement(
@@ -139,7 +137,7 @@ class EtablissementImportService(
       _ = logger.info(s"Getting back the same jobs")
       after <- entrepriseImportRepository.findRunning().map(_.filterNot(_.id == current))
       inter = after.intersect(before)
-      _     = logger.info(s"Found ${inter.size} non closed jobs")
+      _ = logger.info(s"Found ${inter.size} non closed jobs")
       _ <- inter
         .map(x =>
           entrepriseImportRepository
@@ -160,7 +158,7 @@ class EtablissementImportService(
 
   private def computeQuery() =
     for {
-      token           <- inseeClient.generateToken()
+      token <- inseeClient.generateToken()
       lastExecutedJob <- entrepriseImportRepository.findLastEnded()
       beginPeriod = lastExecutedJob.flatMap(_.lastUpdated)
       disclosedStatus =
@@ -181,10 +179,10 @@ class EtablissementImportService(
     } yield query
 
   private def iterate(
-      query: InseeEtablissementQuery,
-      allCommunes: Seq[GeoApiCommune],
-      header: Option[Header] = None
-  ): Future[InseeEtablissementResponse] =
+                       query: InseeEtablissementQuery,
+                       allCommunes: Seq[GeoApiCommune],
+                       header: Option[Header] = None
+                     ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- process(query, header, allCommunes)
       nextIteration <-
@@ -201,12 +199,12 @@ class EtablissementImportService(
     } yield nextIteration
 
   private def iterateThroughEtablissement(
-      query: InseeEtablissementQuery,
-      executionId: UUID,
-      allCommunes: Seq[GeoApiCommune],
-      header: Option[Header] = None,
-      lineCount: Option[Int] = None
-  ): Future[InseeEtablissementResponse] =
+                                           query: InseeEtablissementQuery,
+                                           executionId: UUID,
+                                           allCommunes: Seq[GeoApiCommune],
+                                           header: Option[Header] = None,
+                                           lineCount: Option[Int] = None
+                                         ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- processEtablissement(
         query,
@@ -232,10 +230,10 @@ class EtablissementImportService(
     } yield nextIteration
 
   private def process(
-      query: InseeEtablissementQuery,
-      header: Option[Header],
-      allCommunes: Seq[GeoApiCommune]
-  ): Future[InseeEtablissementResponse] =
+                       query: InseeEtablissementQuery,
+                       header: Option[Header],
+                       allCommunes: Seq[GeoApiCommune]
+                     ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- inseeClient
         .getEtablissement(
@@ -246,12 +244,12 @@ class EtablissementImportService(
     } yield etablissementResponse
 
   private def processEtablissement(
-      query: InseeEtablissementQuery,
-      executionId: UUID,
-      header: Option[Header],
-      lineCount: Option[Int],
-      allCommunes: Seq[GeoApiCommune]
-  ): Future[InseeEtablissementResponse] =
+                                    query: InseeEtablissementQuery,
+                                    executionId: UUID,
+                                    header: Option[Header],
+                                    lineCount: Option[Int],
+                                    allCommunes: Seq[GeoApiCommune]
+                                  ): Future[InseeEtablissementResponse] =
     for {
       etablissementResponse <- process(query, header, allCommunes)
       lastUpdated = etablissementResponse.etablissements.lastOption.flatMap(e =>
@@ -263,19 +261,21 @@ class EtablissementImportService(
     } yield etablissementResponse
 
   private def insertOrUpdateEtablissements(
-      etablissementResponse: InseeEtablissementResponse,
-      allCommunes: Seq[GeoApiCommune]
-  ): Future[List[Int]] =
+                                            etablissementResponse: InseeEtablissementResponse,
+                                            allCommunes: Seq[GeoApiCommune]
+                                          ): Future[List[Int]] =
     etablissementResponse.etablissements.map { etablissement =>
-      val denomination         = denominationFromUniteLegale(etablissement.uniteLegale)
+      val denomination = denominationFromUniteLegale(etablissement.uniteLegale)
       val maybeCodeDepartement = Departments.findCodeDepartementOfEtablissement(Left(etablissement), allCommunes)
       val companyData: Map[String, Option[String]] = etablissement.toMap(denomination, maybeCodeDepartement)
       repository.insertOrUpdate(companyData)
     }.sequence
 
   private[orchestrators] def denominationFromUniteLegale(uniteLegale: UniteLegale): String = {
-    val fallbackName = s"${uniteLegale.prenomUsuelUniteLegale.getOrElse("")} ${uniteLegale.nomUsageUniteLegale
-        .getOrElse(uniteLegale.nomUniteLegale.getOrElse(""))}"
+    val fallbackName = s"${uniteLegale.prenomUsuelUniteLegale.getOrElse("")} ${
+      uniteLegale.nomUsageUniteLegale
+        .getOrElse(uniteLegale.nomUniteLegale.getOrElse(""))
+    }"
     uniteLegale.denominationUniteLegale.getOrElse(fallbackName)
   }
 
