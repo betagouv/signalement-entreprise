@@ -339,7 +339,8 @@ class EtablissementServiceTest extends org.specs2.mutable.Specification {
         etatAdministratifEtablissement = isOpen,
         statutDiffusionEtablissement = disclosedStatus,
         nomCommercialEtablissement = None,
-        codeDepartement = None
+        codeDepartement = None,
+        libellePaysEtrangerEtablissement = None
       ),
       None
     )

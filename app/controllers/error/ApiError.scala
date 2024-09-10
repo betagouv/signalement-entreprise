@@ -3,10 +3,13 @@ package controllers.error
 sealed trait AppError extends Throwable with Product with Serializable
 
 case class InseeTokenGenerationError(message: String) extends AppError
-case class InseeEtablissementError(message: String)   extends Exception(message) with AppError
 
-case class GeoApiError(message: String)                        extends Exception(message) with AppError
+case class InseeEtablissementError(message: String) extends Exception(message) with AppError
+
+case class GeoApiError(message: String) extends Exception(message) with AppError
+
 case class EtablissementJobAleadyRunningError(message: String) extends Exception(message) with AppError
+
 sealed trait ApiError extends AppError {
   val `type`: String
   val title: String
@@ -14,11 +17,17 @@ sealed trait ApiError extends AppError {
 }
 
 sealed trait UnauthorizedError extends ApiError
-sealed trait NotFoundError     extends ApiError
-sealed trait BadRequestError   extends ApiError
-sealed trait ForbiddenError    extends ApiError
-sealed trait ConflictError     extends ApiError
-sealed trait InternalAppError  extends ApiError
+
+sealed trait NotFoundError extends ApiError
+
+sealed trait BadRequestError extends ApiError
+
+sealed trait ForbiddenError extends ApiError
+
+sealed trait ConflictError extends ApiError
+
+sealed trait InternalAppError extends ApiError
+
 sealed trait PreconditionError extends ApiError
 
 object ApiError {
@@ -26,7 +35,7 @@ object ApiError {
   final case class ServerError(message: String, cause: Option[Throwable] = None) extends InternalAppError {
     override val `type`: String  = "SC-0001"
     override val title: String   = message
-    override val details: String = "Une erreur inattendue s'est produite."
+    override val details: String = s"Une erreur inattendue s'est produite. $message"
   }
 
   final case object MalformedBody extends BadRequestError {

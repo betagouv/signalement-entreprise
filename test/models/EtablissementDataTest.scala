@@ -38,7 +38,8 @@ class EtablissementDataTest extends Specification {
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
         statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
-        codeDepartement = None
+        codeDepartement = None,
+        libellePaysEtrangerEtablissement = None
       )
       data.computeCommercialName must beNone
     }
@@ -73,7 +74,8 @@ class EtablissementDataTest extends Specification {
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
         statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
-        codeDepartement = Some("  ")
+        codeDepartement = Some("  "),
+        libellePaysEtrangerEtablissement = None
       )
       data.computeCommercialName must beNone
       data.computeEnseigne must beNone
@@ -109,7 +111,8 @@ class EtablissementDataTest extends Specification {
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
         statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
-        codeDepartement = Some("75")
+        codeDepartement = Some("75"),
+        libellePaysEtrangerEtablissement = None
       )
       data.computeCommercialName must beSome("Name1 - Name2 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5 - Name6")
@@ -145,7 +148,8 @@ class EtablissementDataTest extends Specification {
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
         statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
-        codeDepartement = Some("75")
+        codeDepartement = Some("75"),
+        libellePaysEtrangerEtablissement = None
       )
       data.computeCommercialName must beSome("Name1 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5")
@@ -181,7 +185,8 @@ class EtablissementDataTest extends Specification {
         activitePrincipaleEtablissement = None,
         etatAdministratifEtablissement = None,
         statutDiffusionEtablissement = DisclosedStatus.NonPublicLegacy,
-        codeDepartement = Some("75")
+        codeDepartement = Some("75"),
+        libellePaysEtrangerEtablissement = None
       )
       data.computeCommercialName must beSome("Name1 - Name3")
       data.computeEnseigne must beSome("Name4 - Name5")

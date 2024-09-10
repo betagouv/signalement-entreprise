@@ -17,6 +17,8 @@ class EtablissementRepositoryInterfaceMock(
 
   override def insertOrUpdate(companies: Map[String, Option[String]]): Future[Int] = ???
 
+  override def updateDepartment(siret: SIRET, codeDepartment: String): Future[Int] = ???
+
   override def search(
       q: String,
       postalCode: Option[String],
@@ -41,4 +43,7 @@ class EtablissementRepositoryInterfaceMock(
       siren: SIREN,
       openCompaniesOnly: Boolean
   ): Future[Option[(EtablissementData, Option[ActivityCode])]] = Future.successful(searchHeadOfficeBySirenFunc)
+
+  override def listWithoutMissingDepartment(limit: Int): Future[List[EtablissementData]] = ???
+
 }
