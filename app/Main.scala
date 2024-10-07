@@ -1,4 +1,5 @@
 import _root_.controllers._
+import actors.InseeTokenActor
 import clients.GeoApiClient
 import clients.InseeClient
 import clients.InseeClientImpl
@@ -23,6 +24,9 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import config.SignalConsoConfiguration.HashedTokenReader
+import org.apache.pekko.actor.typed
+import org.apache.pekko.actor.typed.scaladsl.adapter.ClassicActorSystemOps
+import org.apache.pekko.util.Timeout
 import org.flywaydb.core.Flyway
 class Main extends ApplicationLoader {
   var components: SignalConsoComponents = _
@@ -75,8 +79,15 @@ class SignalConsoComponents(
 
   val geoApiClient = new GeoApiClient()
 
+  val inseeAuthTokenActor: typed.ActorRef[InseeTokenActor.Command] = actorSystem.spawn(
+    InseeTokenActor(inseeClient),
+    "insee-auth-token-actor"
+  )
+
+  implicit val timeout: Timeout = 30.seconds
   val etablissementService =
     new EtablissementImportService(
+      inseeAuthTokenActor,
       inseeClient,
       geoApiClient,
       companyDataRepository,
@@ -84,7 +95,7 @@ class SignalConsoComponents(
       applicationConfiguration.app
     )
 
-  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(10, TimeUnit.MINUTES), interval = 1.day) { () =>
+  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = Duration(1, TimeUnit.MINUTES), interval = 1.day) { () =>
     etablissementService.importEtablissements(): Unit
   }: Unit
 

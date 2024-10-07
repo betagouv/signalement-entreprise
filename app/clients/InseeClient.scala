@@ -3,7 +3,9 @@ package clients
 import cats.syntax.either._
 import clients.InseeClient.EtablissementPageSize
 import clients.InseeClient.InitialCursor
+import clients.InseeClient.InseeClientError
 import clients.InseeClient.LastModifiedField
+import clients.InseeClient.TokenExpired
 import clients.InseeClient.WildCardPeriod
 import config.InseeTokenConfiguration
 import controllers.error.InseeEtablissementError
@@ -40,9 +42,10 @@ trait InseeClient {
 
   def generateToken(): Future[InseeTokenResponse]
   def getEtablissement(
+      token: InseeTokenResponse,
       query: InseeEtablissementQuery,
-      cursor: Option[String] = None
-  ): Future[InseeEtablissementResponse]
+      cursor: Option[String]
+  ): Future[Either[InseeClientError, InseeEtablissementResponse]]
 }
 
 class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: ExecutionContext) extends InseeClient {
@@ -58,11 +61,16 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
   override def generateToken(): Future[InseeTokenResponse] = {
     val response: Future[Response[Either[ResponseException[String, JsError], InseeTokenResponse]]] =
       basicRequest
-        .post(uri"https://api.insee.fr/token")
-        .body("grant_type=client_credentials")
-        .contentType("")
-        .auth
-        .basic(inseeConfiguration.key, inseeConfiguration.secret)
+        .post(uri"https://auth.insee.net/auth/realms/apim-gravitee/protocol/openid-connect/token")
+        .body(
+          Map(
+            "grant_type"    -> "password",
+            "client_id"     -> inseeConfiguration.clientId,
+            "client_secret" -> inseeConfiguration.clientSecret,
+            "username"      -> inseeConfiguration.username,
+            "password"      -> inseeConfiguration.password
+          )
+        )
         .response(asJson[InseeTokenResponse])
         .send(backend)
 
@@ -78,23 +86,19 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
   }
 
   override def getEtablissement(
+      token: InseeTokenResponse,
       query: InseeEtablissementQuery,
       cursor: Option[String]
-  ): Future[InseeEtablissementResponse] = {
+  ): Future[Either[InseeClientError, InseeEtablissementResponse]] = {
 
     val req: RequestT[Identity, Either[String, String], Any] = basicRequest
       .get(buildUri(query.beginPeriod, cursor, query.endPeriod, query.siret, query.disclosedStatus))
       .auth
-      .bearer(query.token.accessToken.value)
+      .bearer(token.accessToken.value)
 
     logger.debug(req.toCurl(Set("Authorization")))
 
-    val response: Future[Response[Either[ResponseException[String, JsError], InseeEtablissementResponse]]] =
-      sendRequest(req)
-
-    response
-      .map(_.body)
-      .flatMap(r => r.liftTo[Future])
+    sendRequest(req)
   }
 
   private def buildUri(
@@ -117,7 +121,7 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
           .getOrElse("")}${siret.map(s => s" AND siret:$s").getOrElse("")}"""
     )
 
-    uri"https://api.insee.fr/entreprises/sirene/V3.11/siret"
+    uri"https://api.insee.fr/api-sirene/prive/3.11/siret"
       .addQuerySegment(searchQueryParam)
       .addQuerySegment(cursorQueryParam)
       .addQuerySegment(sortQueryParam)
@@ -126,41 +130,39 @@ class InseeClientImpl(inseeConfiguration: InseeTokenConfiguration)(implicit ec: 
 
   def sendRequest(
       req: RequestT[Identity, Either[String, String], Any]
-  ): Future[Response[Either[ResponseException[String, JsError], InseeEtablissementResponse]]] = {
-
-    def response(): Future[Response[Either[ResponseException[String, JsError], InseeEtablissementResponse]]] = req
+  ): Future[Either[InseeClientError, InseeEtablissementResponse]] =
+    req
       .response(asJson[InseeEtablissementResponse])
       .send(backend)
-
-    response().flatMap { r =>
-      logger.info(s"Response : ${r.show(includeBody = false)}")
-      logger.trace(s"Response : ${r.show()}")
-      if (r.isSuccess) {
-        Future.successful(r)
-      } else {
-        r.code match {
-          case StatusCode.TooManyRequests =>
-            logger.debug("Reaching API threshold (30 request/min) , waiting a bit to recover")
-            Thread.sleep(60000)
-            response()
-          case StatusCode.NotFound =>
-            Future.failed(
-              InseeEtablissementError(
-                s"No result found : ${r.body.swap.map(_.getMessage)}"
+      .flatMap { r =>
+        logger.info(s"Response : ${r.show(includeBody = false)}")
+        logger.trace(s"Response : ${r.show()}")
+        if (r.isSuccess) {
+          r.body.liftTo[Future].map(Right(_))
+        } else {
+          r.code match {
+            case StatusCode.TooManyRequests =>
+              logger.debug("Reaching API threshold (30 request/min) , waiting a bit to recover")
+              Thread.sleep(60000)
+              sendRequest(req)
+            case StatusCode.NotFound =>
+              Future.failed(
+                InseeEtablissementError(
+                  s"No result found : ${r.body.swap.map(_.getMessage)}"
+                )
               )
-            )
-          case failedStatusCode =>
-            logger.error(s" Failed status $failedStatusCode error ${r.show()}")
-            Future.failed(
-              InseeEtablissementError(
-                s"Etablissement call failed with status code : ${r.show()}"
+            case StatusCode.Unauthorized | StatusCode.Forbidden =>
+              Future.successful(Left(TokenExpired))
+            case failedStatusCode =>
+              logger.error(s" Failed status $failedStatusCode error ${r.show()}")
+              Future.failed(
+                InseeEtablissementError(
+                  s"Etablissement call failed with status code : ${r.show()}"
+                )
               )
-            )
+          }
         }
       }
-    }
-
-  }
 }
 
 object InseeClient {
@@ -170,4 +172,7 @@ object InseeClient {
   val LastModifiedField     = "dateDernierTraitementEtablissement"
   val WildCardPeriod        = "*"
 
+  sealed trait InseeClientError
+  case object TokenExpired      extends InseeClientError
+  case object RateLimitExceeded extends InseeClientError
 }
