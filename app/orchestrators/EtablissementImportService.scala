@@ -1,10 +1,12 @@
 package orchestrators
 
+import actors.InseeTokenActor
 import cats.implicits.toTraverseOps
 import clients.GeoApiClient
 import clients.InseeClient
 import config.SignalConsoConfiguration
 import controllers.error.EtablissementJobAleadyRunningError
+import controllers.error.InseeEtablissementError
 import models.EnterpriseImportInfo
 import models.ImportRequest
 import models.api.GeoApiCommune
@@ -13,27 +15,70 @@ import models.insee.etablissement.Header
 import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeEtablissementQuery
+import models.insee.token.InseeTokenResponse
+import org.apache.pekko.actor.typed.ActorRef
+import org.apache.pekko.actor.typed.Scheduler
+import org.apache.pekko.actor.typed.scaladsl.AskPattern.Askable
+import org.apache.pekko.actor.typed.scaladsl.adapter.TypedSchedulerOps
+import org.apache.pekko.util.Timeout
 import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
 import utils.Departments
+import org.apache.pekko.pattern.after
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 import scala.util.chaining.scalaUtilChainingOps
 
 class EtablissementImportService(
+    inseeTokenActor: ActorRef[InseeTokenActor.Command],
     inseeClient: InseeClient,
     geoApiClient: GeoApiClient,
     repository: EtablissementRepositoryInterface,
     entrepriseImportRepository: EnterpriseImportInfoRepository,
     signalConsoConfiguration: SignalConsoConfiguration
 )(implicit
-    ec: ExecutionContext
+    ec: ExecutionContext,
+    timeout: Timeout,
+    scheduler: Scheduler
 ) {
 
   private[this] val logger = Logger(this.getClass)
+
+  private def getInseeToken(
+      request: ActorRef[InseeTokenActor.Reply] => InseeTokenActor.Command
+  ): Future[InseeTokenResponse] =
+    inseeTokenActor.ask[InseeTokenActor.Reply](request).flatMap {
+      case InseeTokenActor.GotToken(token)   => Future.successful(token)
+      case InseeTokenActor.TokenError(error) => Future.failed(error)
+    }
+
+  private def fetchDataFromInsee(
+      query: InseeEtablissementQuery,
+      cursor: Option[String] = None
+  ): Future[InseeEtablissementResponse] = for {
+    token    <- getInseeToken(InseeTokenActor.GetToken.apply)
+    firstTry <- inseeClient.getEtablissement(token, query, cursor)
+    result <- firstTry match {
+      case Right(value) => Future.successful(value)
+      case Left(InseeClient.TokenExpired) =>
+        for {
+          renewedAccessToken <- getInseeToken(InseeTokenActor.RenewToken.apply)
+          secondTry          <- inseeClient.getEtablissement(renewedAccessToken, query, cursor)
+          response <- secondTry match {
+            case Right(value) => Future.successful(value)
+            case Left(InseeClient.RateLimitExceeded) =>
+              after(1.minute, scheduler.toClassic)(fetchDataFromInsee(query, cursor))
+            case Left(_) => Future.failed(InseeEtablissementError("An issue occurred with the Insee token"))
+          }
+        } yield response
+      case Left(InseeClient.RateLimitExceeded) =>
+        after(1.minute, scheduler.toClassic)(fetchDataFromInsee(query, cursor))
+    }
+  } yield result
 
   // One shot, API
   def runImportEtablissementsRequest(importRequest: ImportRequest): Future[Unit] =
@@ -42,7 +87,6 @@ class EtablissementImportService(
       _ <-
         if (running.nonEmpty) Future.failed(EtablissementJobAleadyRunningError(s"${running.size} jobs already running"))
         else Future.unit
-      token <- inseeClient.generateToken()
       disclosedStatus =
         if (signalConsoConfiguration.publicDataOnly) {
           logger.warn(
@@ -52,13 +96,12 @@ class EtablissementImportService(
         } else None
       allCommunes <- geoApiClient.getAllCommunes()
       query = InseeEtablissementQuery(
-        token = token,
         beginPeriod = importRequest.begin,
         endPeriod = importRequest.end,
         siret = importRequest.siret,
         disclosedStatus = disclosedStatus
       )
-      firstCall <- inseeClient.getEtablissement(query)
+      firstCall <- fetchDataFromInsee(query)
       _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
       _ <- iterate(query, allCommunes)
     } yield ()
@@ -69,7 +112,7 @@ class EtablissementImportService(
         _           <- validateIfRunning(batchInfo.id)
         allCommunes <- geoApiClient.getAllCommunes()
         query       <- computeQuery()
-        firstCall   <- inseeClient.getEtablissement(query)
+        firstCall   <- fetchDataFromInsee(query)
         _ = logger.info(s"Company count to update  = ${firstCall.header.total}")
         _ <- entrepriseImportRepository.updateLineCount(batchInfo.id, firstCall.header.total.toDouble)
         _ <- iterateThroughEtablissement(
@@ -123,7 +166,6 @@ class EtablissementImportService(
 
   private def computeQuery() =
     for {
-      token           <- inseeClient.generateToken()
       lastExecutedJob <- entrepriseImportRepository.findLastEnded()
       beginPeriod = lastExecutedJob.flatMap(_.lastUpdated)
       disclosedStatus =
@@ -135,7 +177,6 @@ class EtablissementImportService(
         } else None
 
       query = InseeEtablissementQuery(
-        token = token,
         beginPeriod = beginPeriod,
         endPeriod = None,
         disclosedStatus = disclosedStatus
@@ -200,11 +241,10 @@ class EtablissementImportService(
       allCommunes: Seq[GeoApiCommune]
   ): Future[InseeEtablissementResponse] =
     for {
-      etablissementResponse <- inseeClient
-        .getEtablissement(
-          query,
-          cursor = header.flatMap(_.curseurSuivant)
-        )
+      etablissementResponse <- fetchDataFromInsee(
+        query,
+        cursor = header.flatMap(_.curseurSuivant)
+      )
       _ <- insertOrUpdateEtablissements(etablissementResponse, allCommunes)
     } yield etablissementResponse
 
