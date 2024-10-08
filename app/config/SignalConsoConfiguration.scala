@@ -12,7 +12,7 @@ case class SignalConsoConfiguration(
     filterNonDisclosed: Boolean
 )
 
-case class InseeTokenConfiguration(key: String, secret: String)
+case class InseeTokenConfiguration(clientId: String, clientSecret: String, username: String, password: String)
 
 object SignalConsoConfiguration {
 
