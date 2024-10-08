@@ -16,7 +16,6 @@ import models.insee.etablissement.InseeEtablissementResponse
 import models.insee.etablissement.UniteLegale
 import models.insee.token.InseeEtablissementQuery
 import models.insee.token.InseeTokenResponse
-import org.apache.pekko.actor
 import org.apache.pekko.actor.typed.ActorRef
 import org.apache.pekko.actor.typed.Scheduler
 import org.apache.pekko.actor.typed.scaladsl.AskPattern.Askable
@@ -26,7 +25,7 @@ import play.api.Logger
 import repositories.insee.EtablissementRepositoryInterface
 import repositories.entrepriseimportinfo.EnterpriseImportInfoRepository
 import utils.Departments
-import org.apache.pekko.pattern.retry
+import org.apache.pekko.pattern.after
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -47,8 +46,7 @@ class EtablissementImportService(
     scheduler: Scheduler
 ) {
 
-  private[this] val logger                               = Logger(this.getClass)
-  implicit private val classicScheduler: actor.Scheduler = scheduler.toClassic
+  private[this] val logger = Logger(this.getClass)
 
   private def getInseeToken(
       request: ActorRef[InseeTokenActor.Reply] => InseeTokenActor.Command
@@ -73,12 +71,12 @@ class EtablissementImportService(
           response <- secondTry match {
             case Right(value) => Future.successful(value)
             case Left(InseeClient.RateLimitExceeded) =>
-              retry(() => fetchDataFromInsee(query, cursor), 2, 1.minute)
+              after(1.minute, scheduler.toClassic)(fetchDataFromInsee(query, cursor))
             case Left(_) => Future.failed(InseeEtablissementError("An issue occurred with the Insee token"))
           }
         } yield response
       case Left(InseeClient.RateLimitExceeded) =>
-        retry(() => fetchDataFromInsee(query, cursor), 2, 1.minute)
+        after(1.minute, scheduler.toClassic)(fetchDataFromInsee(query, cursor))
     }
   } yield result
 
