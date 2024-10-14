@@ -14,7 +14,7 @@ class HealthController(
 
   def health =
     Action.async(parse.empty) { _ =>
-      Future.successful(Ok(Json.obj("name" -> "signalconso-api")))
+      Future.successful(Ok(Json.obj("name" -> "signalconso-entreprise")))
     }
 
 }
