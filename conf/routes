@@ -2,6 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET         /                                      controllers.HealthController.health
 
 GET         /api/companies/search/smart            controllers.EtablissementController.searchSmart(q: String, postalCode: Option[String], departmentCode: Option[String], lang: java.util.Locale)
 GET         /api/companies/search/:identity        controllers.EtablissementController.searchEtablissementByIdentity(identity: String, openOnly :Option[Boolean], lang: Option[java.util.Locale])
