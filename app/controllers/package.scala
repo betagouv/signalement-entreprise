@@ -16,6 +16,7 @@ import scala.concurrent.Future
 package object controllers {
 
   val logger: Logger = Logger(this.getClass)
+
   implicit class RequestOps[T <: JsValue](request: Request[T])(implicit ec: ExecutionContext) {
     def parseBody[B](path: JsPath = JsPath())(implicit reads: Reads[B]) = request.body
       .validate[B](path.read[B])
