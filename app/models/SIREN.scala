@@ -25,6 +25,16 @@ object SIREN {
     }
   }
 
+  private val tvaNumberPattern = s"FR[0-9]{2}([0-9]{$SirenLength})".r
+
+  def fromTVANumber(value: String): Option[SIREN] = {
+    val trimmed = value.replaceAll("\\s", "")
+    trimmed match {
+      case tvaNumberPattern(siren) => Some(new SIREN(siren))
+      case _                       => None
+    }
+  }
+
   def apply(siret: SIRET): SIREN = SIREN.fromUnsafe(siret.value.substring(0, SirenLength))
 
   def fromUnsafe(value: String): SIREN =
@@ -32,7 +42,7 @@ object SIREN {
 
   def pattern = s"[0-9]{$SirenLength}"
 
-  def isValid(siren: String): Boolean = siren.replaceAll("\\s", "").matches(SIREN.pattern)
+  def isValid(siren: String): Boolean = siren.matches(SIREN.pattern)
 
   implicit val SirenColumnType: JdbcType[SIREN] with BaseTypedType[SIREN] = MappedColumnType.base[SIREN, String](
     _.value,
