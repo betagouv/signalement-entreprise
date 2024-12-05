@@ -81,11 +81,13 @@ class EtablissementService(
     } yield searchResult
   }
 
-  def extractIdentity(identity: String): Option[Either[SIREN, SIRET]] = (SIRET(identity), SIREN(identity)) match {
-    case (Some(siret), _)    => Some(Right(siret))
-    case (None, Some(siren)) => Some(Left(siren))
-    case _                   => None
-  }
+  def extractIdentity(identity: String): Option[Either[SIREN, SIRET]] =
+    (SIRET(identity), SIREN(identity), SIREN.fromTVANumber(identity)) match {
+      case (Some(siret), _, _)       => Some(Right(siret))
+      case (None, Some(siren), _)    => Some(Left(siren))
+      case (None, None, Some(siren)) => Some(Left(siren))
+      case _                         => None
+    }
 
   def getBySiren(
       sirens: List[SIREN],
