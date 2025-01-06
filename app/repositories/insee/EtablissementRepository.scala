@@ -7,8 +7,6 @@ import models.ActivityCode
 import models.EtablissementData
 import models.SIREN
 import models.SIRET
-import models.insee.etablissement.DisclosedStatus
-import models.insee.etablissement.DisclosedStatus.Public
 import repositories.PostgresProfile.api._
 import repositories.insee.EtablissementRepository.toOptionalSqlValue
 import repositories.insee.EtablissementTable.DENOMINATION_USUELLE_ETABLISSEMENT
@@ -66,7 +64,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       .filterOpt(postalCode) { case (table, postalCode) => table.codePostalEtablissement === postalCode }
       .filterOpt(departmentCode) { case (table, departmentCode) => table.codeDepartement === departmentCode }
       .filter(filterClosedEtablissements)
-      .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
       .filter(result =>
         result.searchColumnTrgm %> q
       )            // word similarity and not similarity because we use a composite search column
@@ -106,7 +103,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       table
         .filter(_.siren === SIREN(siret))
         .filter(company => company.siret === siret || company.etablissementSiege === "true")
-        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
         // We want to display the exact match first
         .sortBy(_.siret === siret)
@@ -128,7 +124,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       table
         .filter(_.siren === siren)
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
-        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
@@ -144,7 +139,6 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
         .filter(_.siren === siren)
         .filter(_.etablissementSiege === "true")
         .filterIf(openCompaniesOnly)(filterClosedEtablissements)
-        .filterIf(conf.filterNonDisclosed)(_.statutDiffusionEtablissement === (Public: DisclosedStatus))
         .joinLeft(ActivityCodeTable.table)
         .on(_.activitePrincipaleEtablissement === _.code)
         .to[List]
