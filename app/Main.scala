@@ -5,6 +5,10 @@ import clients.InseeClient
 import clients.InseeClientImpl
 import config.ApplicationConfiguration
 import orchestrators._
+import org.apache.pekko.actor.typed
+import org.apache.pekko.actor.typed.scaladsl.adapter.ClassicActorSystemOps
+import org.apache.pekko.util.Timeout
+import org.flywaydb.core.Flyway
 import play.api._
 import play.api.db.slick.DbName
 import play.api.db.slick.SlickComponents
@@ -23,11 +27,6 @@ import slick.jdbc.JdbcProfile
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
-import config.SignalConsoConfiguration.HashedTokenReader
-import org.apache.pekko.actor.typed
-import org.apache.pekko.actor.typed.scaladsl.adapter.ClassicActorSystemOps
-import org.apache.pekko.util.Timeout
-import org.flywaydb.core.Flyway
 class Main extends ApplicationLoader {
   var components: SignalConsoComponents = _
 
@@ -68,8 +67,7 @@ class SignalConsoComponents(
 
   val dbConfig: DatabaseConfig[JdbcProfile] = slickApi.dbConfig[JdbcProfile](DbName("default"))
 
-  val companyDataRepository: EtablissementRepositoryInterface =
-    new EtablissementRepository(dbConfig, applicationConfiguration.app)
+  val companyDataRepository: EtablissementRepositoryInterface = new EtablissementRepository(dbConfig)
 
   val enterpriseImportInfoRepository: EnterpriseImportInfoRepository = new EnterpriseImportInfoRepository(
     dbConfig

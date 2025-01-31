@@ -1,6 +1,5 @@
 package repositories.insee
 
-import config.SignalConsoConfiguration
 import models.EtablissementData.Closed
 import models.EtablissementData.Open
 import models.ActivityCode
@@ -18,7 +17,7 @@ import slick.lifted.TableQuery
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: SignalConsoConfiguration)(implicit
+class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile])(implicit
     val ec: ExecutionContext
 ) extends EtablissementRepositoryInterface {
 
