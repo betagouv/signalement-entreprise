@@ -35,9 +35,7 @@ class EtablissementRepository(val dbConfig: DatabaseConfig[JdbcProfile], conf: S
       companies.view.mapValues(maybeValue => toOptionalSqlValue(maybeValue)).toMap
     val insertColumns: String = companyKeyValues.keys.mkString(",")
     val insertValues: String  = companyKeyValues.values.mkString(",")
-    val insertValuesOnSiretConflict: String = companyKeyValues.view
-      .filterKeys(_ != DENOMINATION_USUELLE_ETABLISSEMENT)
-      .toMap
+    val insertValuesOnSiretConflict: String = companyKeyValues.view.toMap
       .map { case (columnName, value) => s"$columnName = $value" }
       .mkString(",")
     db.run(sqlu"""INSERT INTO etablissements (#$insertColumns)
